@@ -1,11 +1,14 @@
 import React from 'react'
 
-export default function Nav() {
+export default function Nav({ currentPage, onNavigate }) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 px-6 py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Left Side: Logo */}
-        <div className="flex items-center space-x-3">
+        <div 
+          onClick={() => onNavigate('home')} 
+          className="flex items-center space-x-3 cursor-pointer"
+        >
           <div className="w-8 h-8 bg-white rounded flex items-center justify-center font-black text-slate-950">
             A
           </div>
@@ -17,30 +20,61 @@ export default function Nav() {
 
         {/* Center: Navigation Links */}
         <div className="hidden md:flex items-center space-x-8">
-          <a href="#buy" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+          <a 
+            href="#buy" 
+            onClick={(e) => {
+              e.preventDefault()
+              onNavigate('buy')
+            }}
+            className={`${currentPage === 'buy' ? 'text-white font-bold' : 'text-slate-300'} hover:text-white text-sm font-medium transition-colors`}
+          >
             Buy Car
           </a>
-          <a href="#sell" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+          <a 
+            href="#sell" 
+            onClick={() => onNavigate('home')}
+            className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+          >
             Sell Car
           </a>
-          <a href="#finance" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+          <a 
+            href="#finance" 
+            onClick={() => onNavigate('home')}
+            className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+          >
             Finance
           </a>
-          <a href="#blog" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+          <a 
+            href="#blog" 
+            onClick={() => onNavigate('home')}
+            className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+          >
             Blog
           </a>
-          <a href="#contact" className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
+          <a 
+            href="#contact" 
+            onClick={() => onNavigate('home')}
+            className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+          >
             Contact
           </a>
         </div>
 
         {/* Right Side: Action Buttons */}
         <div className="flex items-center space-x-6">
-          <a href="#dealers" className="text-slate-300 hover:text-white text-sm font-medium transition-colors hidden sm:block">
+          <a 
+            href="#dealers" 
+            onClick={() => onNavigate('home')}
+            className="text-slate-300 hover:text-white text-sm font-medium transition-colors hidden sm:block"
+          >
             For Dealers
           </a>
           <a 
-            href="#browse" 
+            href="#buy" 
+            onClick={(e) => {
+              e.preventDefault()
+              onNavigate('buy')
+            }}
             className="bg-[#E05E1B] hover:bg-[#c95013] text-white px-5 py-2 rounded font-medium text-xs tracking-wide uppercase transition-all shadow-lg shadow-orange-950/30 hover:shadow-orange-950/50"
           >
             Browse Cars
