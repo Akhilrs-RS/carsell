@@ -32,29 +32,41 @@ export default function Nav({ currentPage, onNavigate }) {
           </a>
           <a 
             href="#sell" 
-            onClick={() => onNavigate('home')}
-            className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+            onClick={(e) => {
+              e.preventDefault()
+              onNavigate('sell')
+            }}
+            className={`${currentPage === 'sell' ? 'text-white font-bold' : 'text-slate-300'} hover:text-white text-sm font-medium transition-colors`}
           >
             Sell Car
           </a>
           <a 
             href="#finance" 
-            onClick={() => onNavigate('home')}
-            className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+            onClick={(e) => {
+              e.preventDefault()
+              onNavigate('finance')
+            }}
+            className={`${currentPage === 'finance' ? 'text-white font-bold' : 'text-slate-300'} hover:text-white text-sm font-medium transition-colors`}
           >
             Finance
           </a>
           <a 
             href="#blog" 
-            onClick={() => onNavigate('home')}
-            className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+            onClick={(e) => {
+              e.preventDefault()
+              onNavigate('blog')
+            }}
+            className={`${currentPage === 'blog' ? 'text-white font-bold' : 'text-slate-300'} hover:text-white text-sm font-medium transition-colors`}
           >
             Blog
           </a>
           <a 
             href="#contact" 
-            onClick={() => onNavigate('home')}
-            className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+            onClick={(e) => {
+              e.preventDefault()
+              onNavigate('contact')
+            }}
+            className={`${currentPage === 'contact' ? 'text-white font-bold' : 'text-slate-300'} hover:text-white text-sm font-medium transition-colors`}
           >
             Contact
           </a>
