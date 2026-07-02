@@ -7,6 +7,7 @@ import Finance from './components/finance'
 import Blog from './components/blog'
 import Contact from './components/contact'
 import Admin from './components/admin'
+import ERP from './components/erp'
 import Dealers from './components/dealers'
 import Footer from './components/footer'
 
@@ -15,12 +16,15 @@ function App() {
     if (window.location.pathname === '/admin') {
       return 'admin'
     }
+    if (window.location.pathname === '/erp') {
+      return 'erp'
+    }
     return 'home'
   })
 
   return (
     <>
-      {currentPage !== 'admin' && <Nav currentPage={currentPage} onNavigate={setCurrentPage} />}
+      {currentPage !== 'admin' && currentPage !== 'erp' && <Nav currentPage={currentPage} onNavigate={setCurrentPage} />}
       {currentPage === 'home' && <Home />}
       {currentPage === 'buy' && <BuyCar />}
       {currentPage === 'sell' && <SellCar onNavigate={setCurrentPage} />}
@@ -29,7 +33,8 @@ function App() {
       {currentPage === 'contact' && <Contact />}
       {currentPage === 'dealers' && <Dealers />}
       {currentPage === 'admin' && <Admin />}
-      {currentPage !== 'admin' && <Footer onNavigate={setCurrentPage} />}
+      {currentPage === 'erp' && <ERP />}
+      {currentPage !== 'admin' && currentPage !== 'erp' && <Footer onNavigate={setCurrentPage} />}
     </>
   )
 }

@@ -13,6 +13,15 @@ namespace CarSellApi.Data
         public DbSet<Inquiry> Inquiries { get; set; }
         public DbSet<SellRequest> SellRequests { get; set; }
         public DbSet<FinanceApplication> FinanceApplications { get; set; }
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<Dealer> Dealers { get; set; }
+        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<Account> Accounts { get; set; }
+        public DbSet<JournalEntry> JournalEntries { get; set; }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<ServiceBooking> ServiceBookings { get; set; }
+        public DbSet<JobCard> JobCards { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -170,6 +179,37 @@ namespace CarSellApi.Data
                     IsFeatured = false,
                     CreatedAt = new DateTime(2026, 2, 15, 0, 0, 0, DateTimeKind.Utc)
                 }
+            );
+
+            // Seed ERP Accounts
+            modelBuilder.Entity<Account>().HasData(
+                new Account { Id = 1, Code = "1010", Name = "Cash Account", Type = "Asset", Balance = 15000000m },
+                new Account { Id = 2, Code = "1020", Name = "HDFC Bank", Type = "Asset", Balance = 85000000m },
+                new Account { Id = 3, Code = "1200", Name = "Accounts Receivable", Type = "Asset", Balance = 4500000m },
+                new Account { Id = 4, Code = "2010", Name = "Accounts Payable", Type = "Liability", Balance = 1200000m },
+                new Account { Id = 5, Code = "3010", Name = "Owner Equity", Type = "Equity", Balance = 90000000m },
+                new Account { Id = 6, Code = "4010", Name = "Car Sales Revenue", Type = "Revenue", Balance = 15800000m },
+                new Account { Id = 7, Code = "5010", Name = "Salary Expense", Type = "Expense", Balance = 2500000m }
+            );
+
+            // Seed Employees
+            modelBuilder.Entity<Employee>().HasData(
+                new Employee { Id = 1, Name = "Sanjay Kumar", Department = "Sales", Position = "Sales Director", Salary = 120000m, Status = "Active", DateHired = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Employee { Id = 2, Name = "Ananya Sen", Department = "Finance", Position = "Chief Accountant", Salary = 95000m, Status = "Active", DateHired = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Employee { Id = 3, Name = "Ramesh Pujari", Department = "Workshop", Position = "Senior Mechanic", Salary = 60000m, Status = "Active", DateHired = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Employee { Id = 4, Name = "Pooja Patil", Department = "HR", Position = "HR Executive", Salary = 55000m, Status = "Active", DateHired = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+            );
+
+            // Seed Service Bookings
+            modelBuilder.Entity<ServiceBooking>().HasData(
+                new ServiceBooking { Id = 1, CustomerName = "Vijay Mallya", VehicleDetails = "Audi R8 (MH-01-AB-1234)", ServiceType = "Engine Tuning", AssignedMechanic = "Ramesh Pujari", Status = "In Progress", CreatedAt = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new ServiceBooking { Id = 2, CustomerName = "Karan Johar", VehicleDetails = "Rolls-Royce Ghost (MH-02-CD-5678)", ServiceType = "General Service", AssignedMechanic = "Ramesh Pujari", Status = "QC", CreatedAt = new DateTime(2026, 6, 5, 0, 0, 0, DateTimeKind.Utc) }
+            );
+
+            // Seed Customers
+            modelBuilder.Entity<Customer>().HasData(
+                new Customer { Id = 1, FullName = "Amitabh Bachchan", Email = "amitabh@bachchan.com", Phone = "+91 99999 11111", Address = "Jalsa, Juhu, Mumbai", PurchaseHistory = "Rolls-Royce Ghost (2023)", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Customer { Id = 2, FullName = "Shah Rukh Khan", Email = "srk@mannat.com", Phone = "+91 99999 22222", Address = "Mannat, Bandra, Mumbai", PurchaseHistory = "BMW M4 Competition (2023)", CreatedAt = new DateTime(2026, 1, 5, 0, 0, 0, DateTimeKind.Utc) }
             );
         }
     }
