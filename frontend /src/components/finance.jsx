@@ -1,9 +1,85 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import bcImg from '../assets/bc.png'
 import cvImg from '../assets/cv.png'
 
 export default function Finance() {
   const [searchQuery, setSearchQuery] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [cars, setCars] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    loanAmount: '',
+    tenureMonths: 36,
+    carId: ''
+  })
+
+  useEffect(() => {
+    const fetchCars = async () => {
+      try {
+        const res = await fetch('http://localhost:5080/api/cars')
+        if (res.ok) {
+          const data = await res.json()
+          setCars(data)
+        }
+      } catch (err) {
+        console.error('Failed to fetch cars', err)
+      }
+    }
+    fetchCars()
+  }, [])
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'loanAmount' || name === 'tenureMonths' ? Number(value) : value
+    }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    setSuccess(false)
+
+    const payload = {
+      ...formData,
+      carId: formData.carId ? Number(formData.carId) : null
+    }
+
+    try {
+      const res = await fetch('http://localhost:5080/api/finance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) throw new Error('Submission failed')
+
+      setSuccess(true)
+      setFormData({
+        fullName: '',
+        email: '',
+        phone: '',
+        loanAmount: '',
+        tenureMonths: 36,
+        carId: ''
+      })
+      setTimeout(() => {
+        setIsModalOpen(false)
+        setSuccess(false)
+      }, 3000)
+    } catch (err) {
+      setError('Failed to submit application. Please check your inputs and try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="bg-white text-slate-900 min-h-screen pb-24">
@@ -235,7 +311,10 @@ export default function Finance() {
             <p className="text-sm text-slate-200 leading-relaxed mb-8 max-w-sm">
               Check your EMI and get Quick finance support for your selected vehicle.
             </p>
-            <button className="bg-white hover:bg-slate-100 text-slate-900 font-bold px-6 py-3.5 rounded-full text-xs transition-all shadow-md inline-flex items-center space-x-2 group">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="bg-white hover:bg-slate-100 text-slate-900 font-bold px-6 py-3.5 rounded-full text-xs transition-all shadow-md inline-flex items-center space-x-2 group cursor-pointer"
+            >
               <span>Check Finance Eligibility</span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -296,6 +375,147 @@ export default function Finance() {
         </div>
 
       </section>
+      {/* Eligibility Form Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm transition-opacity">
+          <div className="bg-white w-full max-w-xl rounded-3xl p-8 shadow-2xl relative border border-slate-100 flex flex-col max-h-[90vh]">
+            
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-900 font-serif">Check Finance Eligibility</h3>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-900 text-2xl font-semibold focus:outline-none"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Status alerts */}
+            {success ? (
+              <div className="text-center py-12 text-emerald-600 font-bold flex flex-col items-center">
+                <svg className="w-16 h-16 mb-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h4 className="text-lg font-bold text-slate-950 mb-1">Application Submitted!</h4>
+                <p className="text-xs text-slate-500 font-normal">Our loan approval experts will review your request shortly.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto pr-1">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Full Name</label>
+                  <input 
+                    type="text" 
+                    name="fullName"
+                    required
+                    placeholder="Arjun Mehta" 
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email Address</label>
+                    <input 
+                      type="email" 
+                      name="email"
+                      required
+                      placeholder="arjun@example.com" 
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Phone Number</label>
+                    <input 
+                      type="tel" 
+                      name="phone"
+                      required
+                      placeholder="+91 98765 43210" 
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Requested Loan Amount (INR)</label>
+                    <input 
+                      type="number" 
+                      name="loanAmount"
+                      required
+                      placeholder="e.g. 5000000" 
+                      value={formData.loanAmount}
+                      onChange={handleInputChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tenure (Months)</label>
+                    <select 
+                      name="tenureMonths"
+                      value={formData.tenureMonths}
+                      onChange={handleInputChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
+                    >
+                      <option value={12}>12 Months</option>
+                      <option value={24}>24 Months</option>
+                      <option value={36}>36 Months</option>
+                      <option value={48}>48 Months</option>
+                      <option value={60}>60 Months</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Select Vehicle (Optional)</label>
+                  <select 
+                    name="carId"
+                    value={formData.carId}
+                    onChange={handleInputChange}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
+                  >
+                    <option value="">No specific vehicle selected</option>
+                    {cars.map(c => (
+                      <option key={c.id} value={c.id}>{c.brand} {c.model} ({c.year})</option>
+                    ))}
+                  </select>
+                </div>
+
+                {error && (
+                  <div className="p-3 text-xs font-semibold rounded-lg bg-red-50 text-red-600 border border-red-200">
+                    {error}
+                  </div>
+                )}
+
+                <div className="pt-4 flex justify-end space-x-3 border-t border-slate-100">
+                  <button 
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg uppercase tracking-wider transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="px-5 py-2.5 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-lg uppercase tracking-wider transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Submitting...' : 'Submit Application'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

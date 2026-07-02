@@ -6,21 +6,30 @@ import SellCar from './components/sellcar'
 import Finance from './components/finance'
 import Blog from './components/blog'
 import Contact from './components/contact'
+import Admin from './components/admin'
+import Dealers from './components/dealers'
 import Footer from './components/footer'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home')
+  const [currentPage, setCurrentPage] = useState(() => {
+    if (window.location.pathname === '/admin') {
+      return 'admin'
+    }
+    return 'home'
+  })
 
   return (
     <>
-      <Nav currentPage={currentPage} onNavigate={setCurrentPage} />
+      {currentPage !== 'admin' && <Nav currentPage={currentPage} onNavigate={setCurrentPage} />}
       {currentPage === 'home' && <Home />}
       {currentPage === 'buy' && <BuyCar />}
       {currentPage === 'sell' && <SellCar onNavigate={setCurrentPage} />}
       {currentPage === 'finance' && <Finance />}
       {currentPage === 'blog' && <Blog />}
       {currentPage === 'contact' && <Contact />}
-      <Footer />
+      {currentPage === 'dealers' && <Dealers />}
+      {currentPage === 'admin' && <Admin />}
+      {currentPage !== 'admin' && <Footer onNavigate={setCurrentPage} />}
     </>
   )
 }

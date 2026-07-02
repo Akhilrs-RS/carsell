@@ -3,6 +3,49 @@ import bcImg from '../assets/bc.png'
 
 export default function Contact() {
   const [searchQuery, setSearchQuery] = useState('')
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  })
+  const [status, setStatus] = useState({ type: '', message: '' })
+  const [loading, setLoading] = useState(false)
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setStatus({ type: '', message: '' })
+
+    try {
+      const res = await fetch('http://localhost:5080/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      if (!res.ok) throw new Error('Failed to submit message')
+
+      setStatus({ type: 'success', message: 'Your message has been sent successfully!' })
+      setFormData({
+        fullName: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: ''
+      })
+    } catch (err) {
+      setStatus({ type: 'error', message: 'Failed to send message. Please try again.' })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="bg-white text-slate-900 min-h-screen pb-24">
@@ -110,12 +153,16 @@ export default function Contact() {
           {/* Form Column */}
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
             <h2 className="text-xl font-bold text-slate-900 mb-6">Send a Message</h2>
-            <form className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
                 <input 
                   type="text" 
+                  name="fullName"
+                  required
                   placeholder="Arjun Mehta" 
+                  value={formData.fullName}
+                  onChange={handleInputChange}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
                 />
               </div>
@@ -124,7 +171,11 @@ export default function Contact() {
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
                 <input 
                   type="email" 
+                  name="email"
+                  required
                   placeholder="arjun@gmail.com" 
+                  value={formData.email}
+                  onChange={handleInputChange}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
                 />
               </div>
@@ -133,7 +184,10 @@ export default function Contact() {
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
                 <input 
                   type="tel" 
+                  name="phone"
                   placeholder="+91 89898 00898" 
+                  value={formData.phone}
+                  onChange={handleInputChange}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
                 />
               </div>
@@ -142,7 +196,10 @@ export default function Contact() {
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Subject</label>
                 <input 
                   type="text" 
-                  placeholder="" 
+                  name="subject"
+                  placeholder="Subject" 
+                  value={formData.subject}
+                  onChange={handleInputChange}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
                 />
               </div>
@@ -151,17 +208,28 @@ export default function Contact() {
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Message</label>
                 <textarea 
                   rows="4"
+                  name="message"
+                  required
                   placeholder="Tell us how we can help..." 
+                  value={formData.message}
+                  onChange={handleInputChange}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors resize-none"
                 ></textarea>
               </div>
 
+              {status.message && (
+                <div className={`p-3 text-xs font-semibold rounded-lg ${status.type === 'success' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                  {status.message}
+                </div>
+              )}
+
               <div className="pt-2">
                 <button 
-                  type="button" 
-                  className="w-full bg-[#404040] hover:bg-slate-900 text-white font-semibold rounded-full py-4 text-sm transition-colors shadow-md"
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full bg-[#404040] hover:bg-slate-900 text-white font-semibold rounded-full py-4 text-sm transition-colors shadow-md disabled:opacity-50"
                 >
-                  Send Message
+                  {loading ? 'Sending Message...' : 'Send Message'}
                 </button>
               </div>
             </form>

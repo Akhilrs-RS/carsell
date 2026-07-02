@@ -4,6 +4,60 @@ import bcImg from '../assets/bc.png'
 export default function SellCar({ onNavigate }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [step, setStep] = useState(1)
+  
+  const [formData, setFormData] = useState({
+    brand: '',
+    model: '',
+    year: '',
+    kmDriven: '',
+    color: '',
+    fuelType: '',
+    preferredDate: '',
+    timeSlot: 'Morning (9:00 AM - 12:00 PM)',
+    address: '',
+    contactNumber: '',
+    fullName: '',
+    email: '',
+    city: ''
+  })
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmitApplication = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    const payload = {
+      ...formData,
+      year: Number(formData.year),
+      kmDriven: Number(formData.kmDriven)
+    }
+
+    try {
+      const res = await fetch('http://localhost:5080/api/sellcars', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to submit application')
+      }
+
+      setStep(5)
+    } catch (err) {
+      setError('Failed to submit application. Please check your network and try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const steps = [
     { id: 1, label: 'Car Details' },
@@ -137,6 +191,9 @@ export default function SellCar({ onNavigate }) {
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Brand</label>
                     <input 
                       type="text" 
+                      name="brand"
+                      value={formData.brand}
+                      onChange={handleInputChange}
                       placeholder="e.g. Porsche" 
                       required
                       className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
@@ -148,6 +205,9 @@ export default function SellCar({ onNavigate }) {
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Model</label>
                     <input 
                       type="text" 
+                      name="model"
+                      value={formData.model}
+                      onChange={handleInputChange}
                       placeholder="e.g. 911 Carrera S" 
                       required
                       className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
@@ -158,7 +218,10 @@ export default function SellCar({ onNavigate }) {
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Year</label>
                     <input 
-                      type="text" 
+                      type="number" 
+                      name="year"
+                      value={formData.year}
+                      onChange={handleInputChange}
                       placeholder="e.g. 2022" 
                       required
                       className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
@@ -169,8 +232,11 @@ export default function SellCar({ onNavigate }) {
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">KM Driven</label>
                     <input 
-                      type="text" 
-                      placeholder="e.g. 18,400" 
+                      type="number" 
+                      name="kmDriven"
+                      value={formData.kmDriven}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 18400" 
                       required
                       className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
                     />
@@ -181,6 +247,9 @@ export default function SellCar({ onNavigate }) {
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Color</label>
                     <input 
                       type="text" 
+                      name="color"
+                      value={formData.color}
+                      onChange={handleInputChange}
                       placeholder="e.g. Arctic Silver" 
                       required
                       className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
@@ -192,6 +261,9 @@ export default function SellCar({ onNavigate }) {
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Fuel Type</label>
                     <input 
                       type="text" 
+                      name="fuelType"
+                      value={formData.fuelType}
+                      onChange={handleInputChange}
                       placeholder="e.g. Petrol" 
                       required
                       className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
@@ -218,18 +290,52 @@ export default function SellCar({ onNavigate }) {
               <h2 className="text-2xl font-serif font-bold text-slate-900 mb-8">Upload Photos</h2>
               
               <div className="space-y-6">
-                <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer group">
-                  <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-slate-500 mb-4 border border-slate-100 group-hover:scale-110 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-sm font-semibold text-slate-700 block mb-1">Drop photos here</span>
-                  <span className="text-xs text-slate-400">or click to browse from your device</span>
-                </div>
+                <input 
+                  type="file" 
+                  id="image-upload" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    const file = e.target.files[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onloadend = () => {
+                        setSelectedImage(reader.result)
+                      }
+                      reader.readAsDataURL(file)
+                    }
+                  }}
+                />
+                <label 
+                  htmlFor="image-upload"
+                  className="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center flex flex-col items-center justify-center bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer group"
+                >
+                  {selectedImage ? (
+                    <div className="w-full max-w-xs h-48 rounded-xl overflow-hidden relative border border-slate-200 bg-white">
+                      <img src={selectedImage} alt="Uploaded Preview" className="object-cover w-full h-full" />
+                      <button 
+                        type="button" 
+                        onClick={(e) => { e.preventDefault(); setSelectedImage(null); }} 
+                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md text-xs font-bold"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-slate-500 mb-4 border border-slate-100 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-semibold text-slate-700 block mb-1">Click to upload photo</span>
+                      <span className="text-xs text-slate-400">or browse from your device</span>
+                    </>
+                  )}
+                </label>
 
                 <p className="text-xs text-slate-400 text-center block mb-8">
-                  Upload up to 10 images in JPG or PNG format. Maximum size 5MB per image.
+                  Upload an image in JPG or PNG format. Maximum size 5MB.
                 </p>
 
                 <div className="pt-4 flex gap-4">
@@ -264,6 +370,9 @@ export default function SellCar({ onNavigate }) {
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Preferred Date</label>
                       <input 
                         type="date" 
+                        name="preferredDate"
+                        value={formData.preferredDate}
+                        onChange={handleInputChange}
                         required
                         className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
                       />
@@ -272,6 +381,9 @@ export default function SellCar({ onNavigate }) {
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Inspection Address</label>
                       <textarea 
                         rows="3"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
                         required
                         placeholder="Enter complete address" 
                         className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors resize-none"
@@ -282,7 +394,12 @@ export default function SellCar({ onNavigate }) {
                   <div className="space-y-6">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Time Slot</label>
-                      <select className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors">
+                      <select 
+                        name="timeSlot"
+                        value={formData.timeSlot}
+                        onChange={handleInputChange}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
+                      >
                         <option>Morning (9:00 AM - 12:00 PM)</option>
                         <option>Afternoon (12:00 PM - 4:00 PM)</option>
                         <option>Evening (4:00 PM - 7:00 PM)</option>
@@ -292,6 +409,9 @@ export default function SellCar({ onNavigate }) {
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Contact Number</label>
                       <input 
                         type="tel" 
+                        name="contactNumber"
+                        value={formData.contactNumber}
+                        onChange={handleInputChange}
                         required
                         placeholder="+91 98765 43210" 
                         className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
@@ -324,21 +444,27 @@ export default function SellCar({ onNavigate }) {
             <div>
               <h2 className="text-2xl font-serif font-bold text-slate-900 mb-8">Your Details</h2>
               
-              <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); setStep(5); }}>
+              <form className="space-y-6" onSubmit={handleSubmitApplication}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
                     <input 
                       type="text" 
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleInputChange}
                       required
                       placeholder="Arjun Mehta" 
                       className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Contact Number</label>
                     <input 
                       type="tel" 
+                      name="contactNumber"
+                      value={formData.contactNumber}
+                      onChange={handleInputChange}
                       required
                       placeholder="+91 98765 43210" 
                       className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
@@ -348,6 +474,9 @@ export default function SellCar({ onNavigate }) {
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
                     <input 
                       type="email" 
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
                       required
                       placeholder="arjun@gmail.com" 
                       className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
@@ -357,12 +486,21 @@ export default function SellCar({ onNavigate }) {
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">City</label>
                     <input 
                       type="text" 
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
                       required
                       placeholder="Mumbai" 
                       className="w-full bg-slate-50 border border-slate-200 rounded-full px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
                     />
                   </div>
                 </div>
+
+                {error && (
+                  <div className="p-3 text-xs font-semibold rounded-lg bg-red-50 text-red-600 border border-red-200">
+                    {error}
+                  </div>
+                )}
 
                 <div className="pt-4 flex gap-4">
                   <button 
@@ -374,9 +512,10 @@ export default function SellCar({ onNavigate }) {
                   </button>
                   <button 
                     type="submit" 
-                    className="w-2/3 bg-[#404040] hover:bg-slate-900 text-white font-semibold rounded-full py-4 text-sm transition-colors shadow-md"
+                    disabled={loading}
+                    className="w-2/3 bg-[#404040] hover:bg-slate-900 text-white font-semibold rounded-full py-4 text-sm transition-colors shadow-md disabled:opacity-50"
                   >
-                    Submit Application
+                    {loading ? 'Submitting...' : 'Submit Application'}
                   </button>
                 </div>
               </form>

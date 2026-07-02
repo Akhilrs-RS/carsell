@@ -6,14 +6,14 @@ services:
     container_name: carselldb
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: SecureCarSell@2026
       MYSQL_DATABASE: carselldb
     ports:
       - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pSecureCarSell@2026"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -26,7 +26,7 @@ services:
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=carselldb;User=root;Password=rootpassword;
+      - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=carselldb;User=root;Password=SecureCarSell@2026;
     ports:
       - "5080:8080"
     depends_on:

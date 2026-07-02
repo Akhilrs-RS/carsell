@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 
 // Configure MySQL Entity Framework Core
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=db;Port=3306;Database=carselldb;User=root;Password=rootpassword;";
+    ?? "Server=db;Port=3306;Database=carselldb;User=root;Password=SecureCarSell@2026;";
 
 builder.Services.AddDbContext<CarSellDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),

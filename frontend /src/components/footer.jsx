@@ -1,6 +1,14 @@
 import React from 'react'
 
-export default function Footer() {
+export default function Footer({ onNavigate }) {
+  const handleNav = (page, e) => {
+    if (onNavigate) {
+      e.preventDefault()
+      onNavigate(page)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   return (
     <footer className="bg-slate-950 text-white border-t border-slate-900 py-16 px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 text-left">
@@ -25,27 +33,27 @@ export default function Footer() {
           <h4 className="text-sm font-bold text-white mb-6 tracking-wide">Marketplace</h4>
           <ul className="space-y-3.5 text-xs">
             <li>
-              <a href="#buy" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#buy" onClick={(e) => handleNav('buy', e)} className="text-slate-400 hover:text-white transition-colors">
                 Buy a Car
               </a>
             </li>
             <li>
-              <a href="#sell" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#sell" onClick={(e) => handleNav('sell', e)} className="text-slate-400 hover:text-white transition-colors">
                 Sell a Car
               </a>
             </li>
             <li>
-              <a href="#listings" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#listings" onClick={(e) => handleNav('buy', e)} className="text-slate-400 hover:text-white transition-colors">
                 Car Listings
               </a>
             </li>
             <li>
-              <a href="#compare" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#compare" onClick={(e) => handleNav('buy', e)} className="text-slate-400 hover:text-white transition-colors">
                 Compare Cars
               </a>
             </li>
             <li>
-              <a href="#calculator" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#calculator" onClick={(e) => handleNav('finance', e)} className="text-slate-400 hover:text-white transition-colors">
                 EMI Calculator
               </a>
             </li>
@@ -57,22 +65,22 @@ export default function Footer() {
           <h4 className="text-sm font-bold text-white mb-6 tracking-wide">Company</h4>
           <ul className="space-y-3.5 text-xs">
             <li>
-              <a href="#about" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#about" onClick={(e) => handleNav('home', e)} className="text-slate-400 hover:text-white transition-colors">
                 About Us
               </a>
             </li>
             <li>
-              <a href="#blog" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#blog" onClick={(e) => handleNav('blog', e)} className="text-slate-400 hover:text-white transition-colors">
                 Blog
               </a>
             </li>
             <li>
-              <a href="#careers" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#careers" onClick={(e) => handleNav('contact', e)} className="text-slate-400 hover:text-white transition-colors">
                 Careers
               </a>
             </li>
             <li>
-              <a href="#contact" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#contact" onClick={(e) => handleNav('contact', e)} className="text-slate-400 hover:text-white transition-colors">
                 Contact
               </a>
             </li>
@@ -84,22 +92,22 @@ export default function Footer() {
           <h4 className="text-sm font-bold text-white mb-6 tracking-wide uppercase">SERVICES</h4>
           <ul className="space-y-3.5 text-xs">
             <li>
-              <a href="#sell-car" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#sell-car" onClick={(e) => handleNav('sell', e)} className="text-slate-400 hover:text-white transition-colors">
                 Sell your Car
               </a>
             </li>
             <li>
-              <a href="#dealer" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#dealer" onClick={(e) => handleNav('dealers', e)} className="text-slate-400 hover:text-white transition-colors">
                 Dealer Registration
               </a>
             </li>
             <li>
-              <a href="#finance" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#finance" onClick={(e) => handleNav('finance', e)} className="text-slate-400 hover:text-white transition-colors">
                 Finance
               </a>
             </li>
             <li>
-              <a href="#insurance" className="text-slate-400 hover:text-white transition-colors">
+              <a href="#insurance" onClick={(e) => handleNav('finance', e)} className="text-slate-400 hover:text-white transition-colors">
                 Insurance
               </a>
             </li>
