@@ -4,6 +4,41 @@ export default function Admin() {
   const API_BASE = `http://${window.location.hostname}:5080/api`
   const [activeTab, setActiveTab] = useState('dashboard')
 
+  // Auth states
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('carsell_admin_auth') === 'true'
+  })
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [showForgot, setShowForgot] = useState(false)
+  const [recoveryEmail, setRecoveryEmail] = useState('')
+  const [recoveryStatus, setRecoveryStatus] = useState('')
+
+  const handleLogin = (e) => {
+    e.preventDefault()
+    if (loginEmail === 'admin@autoflow.in' && loginPassword === 'admin') {
+      setIsLoggedIn(true)
+      localStorage.setItem('carsell_admin_auth', 'true')
+      setError('')
+    } else {
+      setError('Invalid admin credentials!')
+    }
+  }
+
+  const handleLogout = () => {
+    setIsLoggedIn(false)
+    localStorage.removeItem('carsell_admin_auth')
+  }
+
+  const handleForgotPasswordSubmit = (e) => {
+    e.preventDefault()
+    if (recoveryEmail.trim().toLowerCase() === 'admin@autoflow.in') {
+      setRecoveryStatus('Success! Temporary admin access key (Password: admin) has been sent to recovery mailbox: temp-admin-recovery@autoflow.in')
+    } else {
+      setRecoveryStatus('Error: Entered email is not registered as an administrator.')
+    }
+  }
+
   // Data states
   const [cars, setCars] = useState([])
   const [inquiries, setInquiries] = useState([])
@@ -193,6 +228,121 @@ export default function Admin() {
     }).format(val)
   }
 
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Glow Effects */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative z-10 text-left">
+          
+          <div className="text-center mb-8">
+            <span className="text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">
+              Secure Operations Console
+            </span>
+            <h1 className="text-3xl font-bold text-white mt-4 font-serif">Admin Portal</h1>
+            <p className="text-slate-400 text-xs mt-2">Enter credentials to unlock database management utilities.</p>
+          </div>
+
+          {error && (
+            <div className="p-3 mb-4 text-xs font-semibold rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">
+              {error}
+            </div>
+          )}
+
+          {!showForgot ? (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Admin Email</label>
+                <input 
+                  type="email" required placeholder="admin@autoflow.in"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">Password</label>
+                  <button 
+                    type="button"
+                    onClick={() => { setShowForgot(true); setRecoveryStatus(''); setRecoveryEmail(''); }}
+                    className="text-[9px] text-amber-500 hover:text-amber-400 font-bold uppercase tracking-wider cursor-pointer"
+                  >
+                    Forgot?
+                  </button>
+                </div>
+                <input 
+                  type="password" required placeholder="••••••••"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                />
+              </div>
+
+              <button 
+                type="submit"
+                className="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors mt-6 cursor-pointer"
+              >
+                Sign In
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Register Recovery Email</label>
+                <input 
+                  type="email" required placeholder="admin@autoflow.in"
+                  value={recoveryEmail}
+                  onChange={(e) => setRecoveryEmail(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                />
+              </div>
+
+              {recoveryStatus && (
+                <div className={`p-3.5 text-xs font-semibold rounded-lg border ${
+                  recoveryStatus.startsWith('Success') 
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                    : 'bg-red-500/10 text-red-400 border-red-500/20'
+                }`}>
+                  {recoveryStatus}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowForgot(false)}
+                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Back
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Recover Key
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="mt-8 pt-4 border-t border-slate-850 text-center">
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="text-[10px] text-slate-500 hover:text-slate-300 font-bold uppercase tracking-widest transition-colors cursor-pointer"
+            >
+              ← Back to Marketplace
+            </button>
+          </div>
+
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       {/* Sidebar / Navbar layout */}
@@ -263,10 +413,16 @@ export default function Admin() {
             </nav>
           </div>
 
-          <div className="mt-8 border-t border-slate-800 pt-6">
+          <div className="mt-8 border-t border-slate-800 pt-6 space-y-2">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-950/20 border border-red-900/35 hover:bg-red-900/30 text-red-400 hover:text-red-300 rounded-lg text-xs font-semibold tracking-wider uppercase transition-colors cursor-pointer"
+            >
+              <span>Sign Out</span>
+            </button>
             <button
               onClick={() => window.location.href = '/'}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white rounded-lg text-xs font-semibold tracking-wider uppercase transition-colors"
+              className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white rounded-lg text-xs font-semibold tracking-wider uppercase transition-colors cursor-pointer"
             >
               <span>Back to Public Site</span>
             </button>
