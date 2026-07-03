@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CarSellApi.Models
 {
-    public class Inquiry
+    public class User
     {
         [Key]
         public int Id { get; set; }
@@ -15,16 +15,11 @@ namespace CarSellApi.Models
         [MaxLength(150)]
         public string Email { get; set; } = string.Empty;
 
+        [Required]
+        public string PasswordHash { get; set; } = string.Empty;
+
         [MaxLength(50)]
         public string Phone { get; set; } = string.Empty;
-
-        [MaxLength(200)]
-        public string Subject { get; set; } = string.Empty;
-
-        [Required]
-        public string Message { get; set; } = string.Empty;
-
-        public int? UserId { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

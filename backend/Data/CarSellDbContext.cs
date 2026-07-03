@@ -22,6 +22,8 @@ namespace CarSellApi.Data
         public DbSet<Employee> Employees { get; set; }
         public DbSet<ServiceBooking> ServiceBookings { get; set; }
         public DbSet<JobCard> JobCards { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<WishlistItem> WishlistItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -210,6 +212,48 @@ namespace CarSellApi.Data
             modelBuilder.Entity<Customer>().HasData(
                 new Customer { Id = 1, FullName = "Amitabh Bachchan", Email = "amitabh@bachchan.com", Phone = "+91 99999 11111", Address = "Jalsa, Juhu, Mumbai", PurchaseHistory = "Rolls-Royce Ghost (2023)", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
                 new Customer { Id = 2, FullName = "Shah Rukh Khan", Email = "srk@mannat.com", Phone = "+91 99999 22222", Address = "Mannat, Bandra, Mumbai", PurchaseHistory = "BMW M4 Competition (2023)", CreatedAt = new DateTime(2026, 1, 5, 0, 0, 0, DateTimeKind.Utc) }
+            );
+
+            // Seed Users for Customer Portal
+            modelBuilder.Entity<User>().HasData(
+                new User { Id = 1, FullName = "Amitabh Bachchan", Email = "amitabh@bachchan.com", PasswordHash = "amitabh123", Phone = "+91 99999 11111", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+            );
+
+            // Seed initial Wishlist link (Amitabh Bachchan saves the Porsche 911)
+            modelBuilder.Entity<WishlistItem>().HasData(
+                new WishlistItem { Id = 1, UserId = 1, CarId = 1, CreatedAt = new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc) }
+            );
+
+            // Seed Dealers (Approved & Pending Review)
+            modelBuilder.Entity<Dealer>().HasData(
+                new Dealer 
+                { 
+                    Id = 1, 
+                    BusinessName = "Elite Motors Mumbai", 
+                    Email = "dealer@autohub.in", 
+                    Phone = "+91 90000 55555", 
+                    VerificationStatus = "Approved", 
+                    Documents = "gst_cert.pdf,pan_card.pdf", 
+                    ContactPerson = "Rajesh Sharma", 
+                    City = "Mumbai", 
+                    GstNumber = "27AAACX1234M1Z5", 
+                    PasswordHash = "dealer123", 
+                    CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) 
+                },
+                new Dealer 
+                { 
+                    Id = 2, 
+                    BusinessName = "Royal Auto Bengaluru", 
+                    Email = "pending@autohub.in", 
+                    Phone = "+91 90000 66666", 
+                    VerificationStatus = "Pending Review", 
+                    Documents = "incorporation_doc.pdf", 
+                    ContactPerson = "Karthik Gowda", 
+                    City = "Bengaluru", 
+                    GstNumber = "29AAACX5678M2Z9", 
+                    PasswordHash = "dealer123", 
+                    CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc) 
+                }
             );
         }
     }

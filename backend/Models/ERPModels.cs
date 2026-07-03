@@ -48,6 +48,18 @@ namespace CarSellApi.Models
 
         public string Documents { get; set; } = string.Empty; // JSON/comma list of files
 
+        [MaxLength(150)]
+        public string ContactPerson { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string City { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string GstNumber { get; set; } = string.Empty;
+
+        [Required]
+        public string PasswordHash { get; set; } = string.Empty;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 

@@ -23,8 +23,9 @@ export default function Contact() {
     setLoading(true)
     setStatus({ type: '', message: '' })
 
+    const API_BASE = `http://${window.location.hostname}:5080/api`
     try {
-      const res = await fetch('http://localhost:5080/api/contact', {
+      const res = await fetch(`${API_BASE}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

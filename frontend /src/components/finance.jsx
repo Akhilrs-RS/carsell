@@ -18,10 +18,12 @@ export default function Finance() {
     carId: ''
   })
 
+  const API_BASE = `http://${window.location.hostname}:5080/api`
+
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const res = await fetch('http://localhost:5080/api/cars')
+        const res = await fetch(`${API_BASE}/cars`)
         if (res.ok) {
           const data = await res.json()
           setCars(data)
@@ -53,7 +55,7 @@ export default function Finance() {
     }
 
     try {
-      const res = await fetch('http://localhost:5080/api/finance', {
+      const res = await fetch(`${API_BASE}/finance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

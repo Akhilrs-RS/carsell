@@ -1,391 +1,660 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import bcImg from '../assets/bc.png'
 
 export default function Dealers() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [formSubmitted, setFormSubmitted] = useState(false)
-  const [formData, setFormData] = useState({
-    dealershipName: '',
-    contactPerson: '',
-    phoneNumber: '',
-    emailAddress: '',
-    city: '',
-    gstNumber: ''
+  const API_BASE = `http://${window.location.hostname}:5080/api`
+
+  const [dealer, setDealer] = useState(() => {
+    const saved = localStorage.getItem('carsell_dealer')
+    return saved ? JSON.parse(saved) : null
   })
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+  // Auth/Tab States
+  const [authTab, setAuthTab] = useState('register') // 'register' or 'login'
+  const [regSubmitted, setRegSubmitted] = useState(false)
+  const [authError, setAuthError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+
+  // Registration Form
+  const [regForm, setRegForm] = useState({
+    businessName: '',
+    contactPerson: '',
+    phone: '',
+    email: '',
+    city: '',
+    gstNumber: '',
+    password: ''
+  })
+
+  // Login Form
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' })
+
+  // Workspace Dashboard States
+  const [inventory, setInventory] = useState([])
+  const [dashboardTab, setDashboardTab] = useState('publish') // 'publish' or 'inventory'
+  const [publishForm, setPublishForm] = useState({
+    brand: '',
+    model: '',
+    year: '',
+    kmDriven: '',
+    price: '',
+    color: '',
+    fuelType: 'Petrol',
+    transmission: 'Automatic',
+    imageUrl: '/assets/b1.png'
+  })
+  const [publishStatus, setPublishStatus] = useState({ type: '', message: '' })
+  const [publishLoading, setPublishLoading] = useState(false)
+
+  // Fetch all cars on mount or refresh
+  const fetchInventory = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/cars`)
+      if (res.ok) {
+        setInventory(await res.json())
+      }
+    } catch (err) {
+      console.error('Failed to fetch catalog', err)
+    }
   }
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    fetchInventory()
+  }, [])
+
+  // Handle Registration Submit
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault()
-    setFormSubmitted(true)
-    setTimeout(() => {
-      setFormSubmitted(false)
-      setFormData({
-        dealershipName: '',
-        contactPerson: '',
-        phoneNumber: '',
-        emailAddress: '',
-        city: '',
-        gstNumber: ''
+    setAuthError('')
+    setAuthLoading(true)
+
+    const payload = {
+      BusinessName: regForm.businessName,
+      ContactPerson: regForm.contactPerson,
+      Phone: regForm.phone,
+      Email: regForm.email,
+      City: regForm.city,
+      GstNumber: regForm.gstNumber,
+      PasswordHash: regForm.password,
+      Documents: 'registration_proof.pdf'
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/crm/dealers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       })
-    }, 4000)
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.message || 'Registration failed')
+      }
+
+      setRegSubmitted(true)
+      setRegForm({
+        businessName: '',
+        contactPerson: '',
+        phone: '',
+        email: '',
+        city: '',
+        gstNumber: '',
+        password: ''
+      })
+    } catch (err) {
+      setAuthError(err.message)
+    } finally {
+      setAuthLoading(false)
+    }
   }
 
-  return (
-    <div className="bg-white text-slate-900 font-sans min-h-screen">
-      {/* Hero Section */}
-      <section 
-        className="relative min-h-[500px] flex items-center justify-center bg-cover bg-center pt-24 pb-16"
-        style={{ backgroundImage: `url(${bcImg})` }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/85 to-slate-950/90"></div>
-        <div className="relative max-w-7xl mx-auto px-6 w-full text-center sm:text-left z-10">
-          <span className="text-[#E05E1B] text-xs font-bold uppercase tracking-widest block mb-3">
-            Partner With Us
-          </span>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight mb-4 max-w-2xl font-serif">
-            Dealer Registration
-          </h1>
-          <p className="text-slate-300 text-base sm:text-lg max-w-xl mb-8 leading-relaxed">
-            Join India's fastest-growing automotive marketplace and scale your dealership.
-          </p>
+  // Handle Login Submit
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault()
+    setAuthError('')
+    setAuthLoading(true)
 
-          {/* Search Box */}
-          <div className="flex flex-col sm:flex-row items-center max-w-lg w-full bg-slate-900/60 border border-slate-800 p-2 rounded-xl backdrop-blur gap-2">
-            <div className="flex items-center flex-1 w-full px-3">
-              <svg className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input 
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by brand, model..."
-                className="w-full bg-transparent border-none text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-0"
-              />
-            </div>
-            <button className="w-full sm:w-auto bg-white hover:bg-slate-200 text-slate-950 px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">
-              Search
-            </button>
-          </div>
-        </div>
-      </section>
+    try {
+      const res = await fetch(`${API_BASE}/crm/dealers/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginForm.email, password: loginForm.password })
+      })
 
-      {/* Highlights Section */}
-      <section className="py-16 bg-slate-50 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Card 1 */}
-            <div className="bg-white border border-slate-200/80 p-8 rounded-2xl shadow-sm hover:shadow-md transition-all text-center">
-              <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-5 text-[#E05E1B]">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-slate-950 mb-2">50,000+ Verified Buyers</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">
-                Access to our premium buyer network across 50+ cities.
-              </p>
-            </div>
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.message || 'Invalid credentials')
+      }
 
-            {/* Card 2 */}
-            <div className="bg-white border border-slate-200/80 p-8 rounded-2xl shadow-sm hover:shadow-md transition-all text-center">
-              <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-5 text-[#E05E1B]">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-slate-950 mb-2">10x More Leads</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">
-                Dealers report 10x more qualified leads vs traditional channels.
-              </p>
-            </div>
+      localStorage.setItem('carsell_dealer', JSON.stringify(data.dealer))
+      setDealer(data.dealer)
+    } catch (err) {
+      setAuthError(err.message)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
 
-            {/* Card 3 */}
-            <div className="bg-white border border-slate-200/80 p-8 rounded-2xl shadow-sm hover:shadow-md transition-all text-center">
-              <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-5 text-[#E05E1B]">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-slate-950 mb-2">Premium Badge</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">
-                MotorElite Certified Dealer badge builds buyer trust instantly.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+  // Handle Publish Stock Submit
+  const handlePublishSubmit = async (e) => {
+    e.preventDefault()
+    setPublishStatus({ type: '', message: '' })
+    setPublishLoading(true)
 
-      {/* Pricing Plans Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-3xl font-extrabold text-center text-slate-950 mb-16">
-            Choose Your Plan
-          </h2>
+    const payload = {
+      brand: publishForm.brand,
+      model: publishForm.model,
+      year: Number(publishForm.year),
+      kmDriven: Number(publishForm.kmDriven),
+      price: Number(publishForm.price),
+      color: publishForm.color,
+      fuelType: publishForm.fuelType,
+      transmission: publishForm.transmission,
+      imageUrl: publishForm.imageUrl,
+      isFeatured: false
+    }
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-            {/* Starter Plan */}
-            <div className="bg-white border border-slate-200/80 p-8 rounded-2xl flex flex-col justify-between hover:shadow-lg transition-all">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Starter</h3>
-                <div className="flex items-baseline mb-1">
-                  <span className="text-3xl font-black text-slate-950">₹4,999</span>
-                  <span className="text-slate-500 text-sm ml-2">/month</span>
-                </div>
-                <span className="text-xs text-[#E05E1B] font-bold tracking-wide uppercase block mb-6">
-                  Up to 15 listings
-                </span>
+    try {
+      const res = await fetch(`${API_BASE}/cars`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
 
-                <ul className="space-y-4 text-sm text-slate-600 mb-8">
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Basic analytics</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Standard support</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Mobile app access</span>
-                  </li>
-                </ul>
-              </div>
-              <button className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors mt-auto">
-                Get Started
-              </button>
-            </div>
+      if (!res.ok) {
+        throw new Error('Failed to publish vehicle listing')
+      }
 
-            {/* Growth Plan - Highlighted */}
-            <div className="relative bg-slate-950 text-white p-8 rounded-2xl flex flex-col justify-between shadow-2xl border border-slate-900 transform md:-translate-y-2">
-              <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow">
-                Most Popular
+      setPublishStatus({ type: 'success', message: 'Vehicle listing published to live catalog successfully!' })
+      setPublishForm({
+        brand: '',
+        model: '',
+        year: '',
+        kmDriven: '',
+        price: '',
+        color: '',
+        fuelType: 'Petrol',
+        transmission: 'Automatic',
+        imageUrl: '/assets/b1.png'
+      })
+      fetchInventory()
+    } catch (err) {
+      setPublishStatus({ type: 'error', message: err.message })
+    } finally {
+      setPublishLoading(false)
+    }
+  }
+
+  // Handle Logout
+  const handleLogout = () => {
+    localStorage.removeItem('carsell_dealer')
+    setDealer(null)
+    setRegSubmitted(false)
+    setAuthError('')
+  }
+
+  // PORTAL VIEW (Unauthenticated - Login / Register)
+  if (!dealer) {
+    return (
+      <div className="bg-slate-950 text-slate-100 font-sans min-h-screen pt-24 pb-20 px-6 flex flex-col justify-center items-center">
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-10 bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-12 shadow-2xl relative">
+          
+          {/* Left Column: Partner Highlights & Pricing Summary */}
+          <div className="text-left flex flex-col justify-between space-y-8 pr-0 md:pr-6 border-r border-slate-800/60 md:border-r">
+            <div>
+              <span className="text-amber-500 text-[10px] font-black uppercase tracking-widest block mb-2">
+                Dealer Partner Program
               </span>
-              <div>
-                <h3 className="text-lg font-bold text-white mb-2">Growth</h3>
-                <div className="flex items-baseline mb-1">
-                  <span className="text-3xl font-black text-white">₹12,999</span>
-                  <span className="text-slate-400 text-sm ml-2">/month</span>
-                </div>
-                <span className="text-xs text-amber-400 font-bold tracking-wide uppercase block mb-6">
-                  Up to 100 listings
-                </span>
-
-                <ul className="space-y-4 text-sm text-slate-300 mb-8">
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Advanced analytics</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Priority support</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Featured listing slots</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Lead management CRM</span>
-                  </li>
-                </ul>
-              </div>
-              <button className="w-full py-3 bg-[#E05E1B] hover:bg-[#c95013] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors mt-auto">
-                Get Started
-              </button>
+              <h1 className="text-3xl font-bold text-white font-serif leading-tight">
+                Scale Your Luxury Dealership
+              </h1>
+              <p className="text-slate-400 text-xs mt-3 leading-relaxed">
+                Unlock instant listing publications to our premium catalog, track verification approvals, and acquire verified hot leads in real-time.
+              </p>
             </div>
 
-            {/* Enterprise Plan */}
-            <div className="bg-white border border-slate-200/80 p-8 rounded-2xl flex flex-col justify-between hover:shadow-lg transition-all">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Enterprise</h3>
-                <div className="flex items-baseline mb-1">
-                  <span className="text-3xl font-black text-slate-950">Custom</span>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3.5">
+                <span className="w-8 h-8 rounded-lg bg-slate-950 flex items-center justify-center text-sm">📈</span>
+                <div>
+                  <p className="text-xs font-bold text-white">10x Higher Conversion Rate</p>
+                  <p className="text-[10px] text-slate-500">Dealers report qualified leads closing in under 48 hours.</p>
                 </div>
-                <span className="text-xs text-[#E05E1B] font-bold tracking-wide uppercase block mb-6">
-                  Unlimited listings
-                </span>
-
-                <ul className="space-y-4 text-sm text-slate-600 mb-8">
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Dedicated account manager</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>API access</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>White-label portal</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Custom Integrations</span>
-                  </li>
-                </ul>
               </div>
-              <button className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors mt-auto">
-                Get Started
-              </button>
+
+              <div className="flex items-center space-x-3.5">
+                <span className="w-8 h-8 rounded-lg bg-slate-950 flex items-center justify-center text-sm">🎫</span>
+                <div>
+                  <p className="text-xs font-bold text-white">MotorElite Certification Badge</p>
+                  <p className="text-[10px] text-slate-500">Build immediate buyer trust with verified dealer highlights.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-850 text-[11px] text-slate-500 font-medium">
+              Dealer Support Desk: <span className="text-slate-300 font-bold">support@autoflow.in</span>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Register as a Dealer Form */}
-      <section className="py-20 bg-slate-50 border-t border-slate-100">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-8 sm:p-12 shadow-xl shadow-slate-200/30">
-            <h2 className="text-2xl font-black text-center text-slate-950 mb-10 font-serif">
-              Register as a Dealer
-            </h2>
+          {/* Right Column: Auth Tab Cards */}
+          <div className="flex flex-col text-left">
+            <div className="flex border-b border-slate-850 mb-6">
+              <button 
+                onClick={() => { setAuthTab('register'); setAuthError('') }}
+                className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-center ${
+                  authTab === 'register' ? 'border-b-2 border-amber-500 text-white' : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Register
+              </button>
+              <button 
+                onClick={() => { setAuthTab('login'); setAuthError('') }}
+                className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-center ${
+                  authTab === 'login' ? 'border-b-2 border-amber-500 text-white' : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Sign In
+              </button>
+            </div>
 
-            {formSubmitted ? (
-              <div className="text-center py-12 text-[#E05E1B] font-bold">
-                <svg className="w-16 h-16 mx-auto mb-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 className="text-xl font-extrabold text-slate-950 mb-1">Registration Submitted!</h3>
-                <p className="text-slate-500 text-sm font-normal">Our Dealer Relations team will reach out within 24 hours.</p>
+            {authError && (
+              <div className="p-3 mb-4 text-xs font-semibold rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">
+                {authError}
               </div>
+            )}
+
+            {authTab === 'register' ? (
+              regSubmitted ? (
+                <div className="text-center py-12 text-[#E05E1B] font-bold my-auto">
+                  <svg className="w-12 h-12 mx-auto mb-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h3 className="text-lg font-extrabold text-slate-100 mb-1">Registration Recorded!</h3>
+                  <p className="text-slate-400 text-xs font-normal">Our team will verify your uploaded documents and GST records shortly.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Dealership Name</label>
+                    <input 
+                      type="text" required placeholder="Elite Cars Mumbai"
+                      value={regForm.businessName}
+                      onChange={(e) => setRegForm(prev => ({ ...prev, businessName: e.target.value }))}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Contact Person</label>
+                      <input 
+                        type="text" required placeholder="Rajesh Sharma"
+                        value={regForm.contactPerson}
+                        onChange={(e) => setRegForm(prev => ({ ...prev, contactPerson: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Phone Number</label>
+                      <input 
+                        type="tel" required placeholder="+91 98765 43210"
+                        value={regForm.phone}
+                        onChange={(e) => setRegForm(prev => ({ ...prev, phone: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email Address</label>
+                    <input 
+                      type="email" required placeholder="dealer@autohub.in"
+                      value={regForm.email}
+                      onChange={(e) => setRegForm(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">City</label>
+                      <input 
+                        type="text" required placeholder="Mumbai"
+                        value={regForm.city}
+                        onChange={(e) => setRegForm(prev => ({ ...prev, city: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">GST Number</label>
+                      <input 
+                        type="text" required placeholder="27AAACX1234M1Z5"
+                        value={regForm.gstNumber}
+                        onChange={(e) => setRegForm(prev => ({ ...prev, gstNumber: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Portal Password</label>
+                    <input 
+                      type="password" required placeholder="••••••••"
+                      value={regForm.password}
+                      onChange={(e) => setRegForm(prev => ({ ...prev, password: e.target.value }))}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" disabled={authLoading}
+                    className="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors disabled:opacity-50 mt-4 cursor-pointer"
+                  >
+                    {authLoading ? 'Submitting Application...' : 'Register Agency'}
+                  </button>
+                </form>
+              )
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Dealership Name */}
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                      Dealership Name
-                    </label>
-                    <input 
-                      type="text" 
-                      name="dealershipName"
-                      required
-                      value={formData.dealershipName}
-                      onChange={handleInputChange}
-                      placeholder="AutoHub Premium Cars"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400"
-                    />
-                  </div>
+              <form onSubmit={handleLoginSubmit} className="space-y-4 my-auto">
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email Address</label>
+                  <input 
+                    type="email" required placeholder="dealer@autohub.in"
+                    value={loginForm.email}
+                    onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-3 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                  />
+                </div>
 
-                  {/* Contact Person */}
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                      Contact Person
-                    </label>
-                    <input 
-                      type="text" 
-                      name="contactPerson"
-                      required
-                      value={formData.contactPerson}
-                      onChange={handleInputChange}
-                      placeholder="Rajesh Sharma"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400"
-                    />
-                  </div>
-
-                  {/* Phone Number */}
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                      Phone Number
-                    </label>
-                    <input 
-                      type="tel" 
-                      name="phoneNumber"
-                      required
-                      value={formData.phoneNumber}
-                      onChange={handleInputChange}
-                      placeholder="+91 98765 43210"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400"
-                    />
-                  </div>
-
-                  {/* Email Address */}
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                      Email Address
-                    </label>
-                    <input 
-                      type="email" 
-                      name="emailAddress"
-                      required
-                      value={formData.emailAddress}
-                      onChange={handleInputChange}
-                      placeholder="rajesh@autohub.in"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400"
-                    />
-                  </div>
-
-                  {/* City */}
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                      City
-                    </label>
-                    <input 
-                      type="text" 
-                      name="city"
-                      required
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      placeholder="Mumbai"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400"
-                    />
-                  </div>
-
-                  {/* GST Number */}
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                      GST Number
-                    </label>
-                    <input 
-                      type="text" 
-                      name="gstNumber"
-                      required
-                      value={formData.gstNumber}
-                      onChange={handleInputChange}
-                      placeholder="27AAACX1234M1Z5"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Portal Password</label>
+                  <input 
+                    type="password" required placeholder="••••••••"
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-3 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                  />
                 </div>
 
                 <button 
-                  type="submit"
-                  className="w-full py-4 bg-[#4A4A4A] hover:bg-[#3d3d3d] text-white font-bold rounded-xl text-sm transition-colors mt-6 uppercase tracking-wider"
+                  type="submit" disabled={authLoading}
+                  className="w-full py-3.5 bg-white hover:bg-slate-100 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors disabled:opacity-50 mt-4 cursor-pointer"
                 >
-                  Submit Registration
+                  {authLoading ? 'Signing In...' : 'Sign In'}
                 </button>
               </form>
             )}
           </div>
+
         </div>
-      </section>
+      </div>
+    )
+  }
+
+  // WORKSPACE PORTAL VIEW (Authenticated)
+  return (
+    <div className="bg-slate-950 text-slate-100 font-sans min-h-screen pt-20 flex flex-col">
+      {/* Header Banner */}
+      <header className="bg-slate-900 border-b border-slate-850 px-8 py-6 flex items-center justify-between text-left">
+        <div>
+          <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider">
+            Elite Partner Workspace
+          </span>
+          <h1 className="text-xl font-bold font-serif text-white mt-1">
+            {dealer.businessName}
+          </h1>
+          <p className="text-[10px] text-slate-500">Registered Email: {dealer.email}</p>
+        </div>
+
+        <button 
+          onClick={handleLogout}
+          className="bg-slate-800 hover:bg-slate-750 text-white font-bold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer"
+        >
+          Sign Out
+        </button>
+      </header>
+
+      {/* Verification status checker */}
+      <div className="max-w-7xl mx-auto w-full px-6 pt-8 text-left">
+        {dealer.verificationStatus === 'Pending Review' && (
+          <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-5 rounded-2xl flex items-center space-x-4">
+            <span className="text-2xl">⏳</span>
+            <div>
+              <p className="text-xs font-bold">Verification Pending Review</p>
+              <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                Our dealership verification team is currently validating your business registrations and GST certificates. You will be unlocked to publish listings to the public catalog once approved.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {dealer.verificationStatus === 'Rejected' && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-5 rounded-2xl flex items-center space-x-4">
+            <span className="text-2xl">🛑</span>
+            <div>
+              <p className="text-xs font-bold">Account Verification Rejected</p>
+              <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                Your agency registration was rejected due to mismatching licence proofs. Please reach out to partnersupport@autoflow.in for assistance.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {dealer.verificationStatus === 'Approved' && (
+          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-5 rounded-2xl flex items-center space-x-4">
+            <span className="text-2xl">✅</span>
+            <div>
+              <p className="text-xs font-bold">Verification Approved</p>
+              <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                Congratulations! Your dealership has been verified. You now have full listing publishing privileges enabled.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Workspace Body */}
+      {dealer.verificationStatus === 'Approved' && (
+        <div className="max-w-7xl mx-auto w-full px-6 py-8 flex flex-col lg:flex-row gap-8 text-left flex-grow">
+          {/* Left panel tabs */}
+          <aside className="w-full lg:w-60 flex-shrink-0 flex flex-col space-y-2">
+            <button 
+              onClick={() => setDashboardTab('publish')}
+              className={`w-full text-left px-4 py-3 rounded-xl flex items-center space-x-3 text-xs transition-colors font-bold uppercase tracking-wider ${
+                dashboardTab === 'publish' ? 'bg-amber-600 text-white shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'
+              }`}
+            >
+              <span>🚗</span>
+              <span>Publish Vehicle</span>
+            </button>
+
+            <button 
+              onClick={() => setDashboardTab('inventory')}
+              className={`w-full text-left px-4 py-3 rounded-xl flex items-center space-x-3 text-xs transition-colors font-bold uppercase tracking-wider ${
+                dashboardTab === 'inventory' ? 'bg-amber-600 text-white shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'
+              }`}
+            >
+              <span>📊</span>
+              <span>Active Stock ({inventory.length})</span>
+            </button>
+          </aside>
+
+          {/* Right panel content area */}
+          <section className="flex-grow bg-slate-900 border border-slate-850 rounded-3xl p-8 min-h-[50vh]">
+            
+            {/* TAB 1: PUBLISH STOCK */}
+            {dashboardTab === 'publish' && (
+              <div>
+                <h3 className="text-lg font-serif font-bold text-white mb-6">List Luxury Vehicle</h3>
+
+                {publishStatus.message && (
+                  <div className={`p-4 mb-6 text-xs font-semibold rounded-lg border ${
+                    publishStatus.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
+                  }`}>
+                    {publishStatus.message}
+                  </div>
+                )}
+
+                <form onSubmit={handlePublishSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Brand</label>
+                      <input 
+                        type="text" required placeholder="Porsche"
+                        value={publishForm.brand}
+                        onChange={(e) => setPublishForm(prev => ({ ...prev, brand: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Model</label>
+                      <input 
+                        type="text" required placeholder="911 Carrera S"
+                        value={publishForm.model}
+                        onChange={(e) => setPublishForm(prev => ({ ...prev, model: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Year</label>
+                      <input 
+                        type="number" required placeholder="2024"
+                        value={publishForm.year}
+                        onChange={(e) => setPublishForm(prev => ({ ...prev, year: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">KM Driven</label>
+                      <input 
+                        type="number" required placeholder="4500"
+                        value={publishForm.kmDriven}
+                        onChange={(e) => setPublishForm(prev => ({ ...prev, kmDriven: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Price (INR)</label>
+                      <input 
+                        type="number" required placeholder="18500000"
+                        value={publishForm.price}
+                        onChange={(e) => setPublishForm(prev => ({ ...prev, price: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Color</label>
+                      <input 
+                        type="text" required placeholder="Guards Red"
+                        value={publishForm.color}
+                        onChange={(e) => setPublishForm(prev => ({ ...prev, color: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Fuel Type</label>
+                      <select 
+                        value={publishForm.fuelType}
+                        onChange={(e) => setPublishForm(prev => ({ ...prev, fuelType: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-slate-500"
+                      >
+                        <option value="Petrol">Petrol</option>
+                        <option value="Diesel">Diesel</option>
+                        <option value="Electric">Electric</option>
+                        <option value="Hybrid">Hybrid</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Transmission</label>
+                      <select 
+                        value={publishForm.transmission}
+                        onChange={(e) => setPublishForm(prev => ({ ...prev, transmission: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-slate-500"
+                      >
+                        <option value="Automatic">Automatic</option>
+                        <option value="Manual">Manual</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Photo Image Asset Path</label>
+                    <input 
+                      type="text" required placeholder="/assets/b1.png"
+                      value={publishForm.imageUrl}
+                      onChange={(e) => setPublishForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-slate-500"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" disabled={publishLoading}
+                    className="w-full py-4 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors disabled:opacity-50 mt-6 cursor-pointer"
+                  >
+                    {publishLoading ? 'Publishing Vehicle...' : 'Publish Vehicle'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* TAB 2: ACTIVE STOCK LIST */}
+            {dashboardTab === 'inventory' && (
+              <div>
+                <h3 className="text-lg font-serif font-bold text-white mb-6">Verified Listings Catalog</h3>
+
+                {inventory.length === 0 ? (
+                  <div className="text-center py-20 text-slate-500 font-normal">
+                    No active vehicles in the marketplace catalog.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {inventory.map(car => (
+                      <div key={car.id} className="bg-slate-950 border border-slate-850 rounded-2xl overflow-hidden flex flex-col">
+                        <div className="h-40 bg-slate-900 overflow-hidden">
+                          <img src={car.imageUrl} alt={car.brand} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="p-5 flex-grow flex flex-col justify-between">
+                          <div>
+                            <span className="text-[9px] font-black uppercase text-amber-500 tracking-wider">{car.brand}</span>
+                            <h4 className="text-sm font-bold text-white mt-0.5">{car.brand} {car.model}</h4>
+                            <p className="text-[10px] text-slate-500 mt-1">{car.year} &bull; {car.kmDriven.toLocaleString()} km &bull; {car.fuelType} &bull; {car.transmission}</p>
+                          </div>
+                          <div className="flex justify-between items-center mt-5 pt-3 border-t border-slate-850">
+                            <span className="text-xs font-bold text-white">₹{(car.price / 100000).toFixed(2)} Lakh</span>
+                            <span className="bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-emerald-500/25">
+                              Live
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+          </section>
+        </div>
+      )}
+
+      {/* Fallback space for review and rejected states */}
+      {dealer.verificationStatus !== 'Approved' && (
+        <div className="flex-grow flex justify-center items-center py-20 text-slate-500 text-xs font-semibold uppercase tracking-widest">
+          Workspace access locked until account verification completes.
+        </div>
+      )}
+
     </div>
   )
 }

@@ -29,6 +29,8 @@ namespace CarSellApi.Models
         [MaxLength(50)]
         public string Status { get; set; } = "Pending Review";
 
+        public int? UserId { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

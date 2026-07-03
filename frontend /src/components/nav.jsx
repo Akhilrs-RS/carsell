@@ -1,7 +1,20 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 export default function Nav({ currentPage, onNavigate }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('carsell_user')
+    return saved ? JSON.parse(saved) : null
+  })
+
+  useEffect(() => {
+    const checkUser = () => {
+      const saved = localStorage.getItem('carsell_user')
+      setUser(saved ? JSON.parse(saved) : null)
+    }
+    window.addEventListener('storage', checkUser)
+    return () => window.removeEventListener('storage', checkUser)
+  }, [])
 
   const handleNavigate = (page, e) => {
     e.preventDefault()
@@ -74,6 +87,23 @@ export default function Nav({ currentPage, onNavigate }) {
           >
             For Dealers
           </a>
+          {user ? (
+            <button 
+              onClick={(e) => handleNavigate('portal', e)}
+              className="w-8 h-8 rounded-full bg-amber-500 text-slate-950 font-bold flex items-center justify-center text-xs tracking-wider cursor-pointer border border-amber-600/30 hover:bg-amber-400 transition-colors"
+              title="My Account Portal"
+            >
+              {user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+            </button>
+          ) : (
+            <a 
+              href="#portal" 
+              onClick={(e) => handleNavigate('portal', e)}
+              className={`${currentPage === 'portal' ? 'text-white font-bold' : 'text-slate-300'} hover:text-white text-sm font-medium transition-colors`}
+            >
+              Sign In
+            </a>
+          )}
           <a 
             href="#buy" 
             onClick={(e) => handleNavigate('buy', e)}
@@ -146,6 +176,24 @@ export default function Nav({ currentPage, onNavigate }) {
           >
             For Dealers
           </a>
+          {user ? (
+            <a 
+              href="#portal" 
+              onClick={(e) => handleNavigate('portal', e)}
+              className="text-slate-450 hover:text-white text-sm font-semibold flex items-center space-x-2.5 transition-colors"
+            >
+              <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 font-bold flex items-center justify-center text-[10px]">{user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}</span>
+              <span>My Account Portal</span>
+            </a>
+          ) : (
+            <a 
+              href="#portal" 
+              onClick={(e) => handleNavigate('portal', e)}
+              className={`${currentPage === 'portal' ? 'text-white font-bold' : 'text-slate-450'} hover:text-white text-sm font-medium transition-colors`}
+            >
+              Sign In
+            </a>
+          )}
           <a 
             href="#buy" 
             onClick={(e) => handleNavigate('buy', e)}

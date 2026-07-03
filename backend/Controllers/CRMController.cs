@@ -66,5 +66,28 @@ namespace CarSellApi.Controllers
 
             return Ok(new { message = $"Dealer verification status updated to {status}!" });
         }
+
+        // POST: api/crm/dealers/login
+        [HttpPost("dealers/login")]
+        public async Task<ActionResult> LoginDealer([FromBody] DealerLoginRequest request)
+        {
+            var dealer = await _context.Dealers.FirstOrDefaultAsync(d => d.Email == request.Email);
+            if (dealer == null || dealer.PasswordHash != request.Password)
+            {
+                return BadRequest(new { message = "Invalid email or password!" });
+            }
+
+            return Ok(new 
+            { 
+                message = "Login successful!", 
+                dealer = new { dealer.Id, dealer.BusinessName, dealer.Email, dealer.VerificationStatus } 
+            });
+        }
+    }
+
+    public class DealerLoginRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

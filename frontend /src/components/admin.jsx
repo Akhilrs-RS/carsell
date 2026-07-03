@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 
 export default function Admin() {
-  const API_BASE = 'http://localhost:5080/api'
+  const API_BASE = `http://${window.location.hostname}:5080/api`
   const [activeTab, setActiveTab] = useState('dashboard')
 
   // Data states

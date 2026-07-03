@@ -47,6 +47,8 @@ namespace CarSellApi.Models
         [MaxLength(100)]
         public string City { get; set; } = string.Empty;
 
+        public int? UserId { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

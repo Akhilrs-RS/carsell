@@ -40,8 +40,9 @@ export default function SellCar({ onNavigate }) {
       kmDriven: Number(formData.kmDriven)
     }
 
+    const API_BASE = `http://${window.location.hostname}:5080/api`
     try {
-      const res = await fetch('http://localhost:5080/api/sellcars', {
+      const res = await fetch(`${API_BASE}/sellcars`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -126,7 +127,7 @@ export default function SellCar({ onNavigate }) {
       </section>
 
       {/* Main Form Section (Light Theme) */}
-      <section className="max-w-4xl mx-auto px-6 py-12 -mt-12 relative z-30">
+      <section className="max-w-4xl mx-auto px-6 pt-16 pb-12 relative z-30">
         {/* Stepper */}
         <div className="flex items-center justify-center mb-10">
           {steps.map((s, idx) => {
