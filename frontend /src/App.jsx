@@ -30,7 +30,7 @@ function App() {
   return (
     <>
       {currentPage !== 'admin' && currentPage !== 'erp' && <Nav currentPage={currentPage} onNavigate={setCurrentPage} />}
-      {currentPage === 'home' && <Home />}
+      {currentPage === 'home' && <Home onNavigate={setCurrentPage} />}
       {currentPage === 'buy' && <BuyCar onNavigate={setCurrentPage} />}
       {currentPage === 'sell' && <SellCar onNavigate={setCurrentPage} />}
       {currentPage === 'finance' && <Finance />}

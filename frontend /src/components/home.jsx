@@ -1,22 +1,68 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import hpImg from '../assets/hp.png'
 import iVideo from '../assets/i.mp4'
 
-// Imports of Handpicked images
-import a1 from '../assets/a1.png'
-import a3 from '../assets/a3.png'
-import a4 from '../assets/a4.jpg'
-import a5 from '../assets/a5.jpg'
-import a6 from '../assets/a6.png'
-import a7 from '../assets/a7.jpg'
+export default function Home({ onNavigate }) {
+  const API_BASE = `http://${window.location.hostname}:5080/api`
+  const [cars, setCars] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [handpickedTab, setHandpickedTab] = useState('featured')
+  
+  // 360 Details Modal
+  const [selectedCar, setSelectedCar] = useState(null)
+  const [activeAngle, setActiveAngle] = useState(0)
 
-export default function Home() {
   // State for interactive EMI calculator
   const [loanAmount, setLoanAmount] = useState(50) // in Lakhs
   const [loanTenure, setLoanTenure] = useState(5) // in Years
 
   // State for interactive FAQ Accordions
   const [expandedFaq, setExpandedFaq] = useState(null)
+
+  // Load database items on mount
+  const fetchCars = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`${API_BASE}/cars`)
+      if (res.ok) {
+        setCars(await res.json())
+      }
+    } catch (err) {
+      console.error('Failed to load cars list for home page', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchCars()
+  }, [])
+
+  // Dynamic 360° perspective rotation simulation styles
+  const getRotateStyle = () => {
+    return {
+      transform: `perspective(800px) rotateY(${activeAngle}deg) scale(${activeAngle === 270 ? '1.15' : '1'})`,
+      filter: activeAngle === 270 ? 'brightness(0.85) contrast(1.1) saturate(1.15) blur(0.3px)' : 'none',
+      transition: 'transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), filter 0.5s ease',
+      transformOrigin: 'center center'
+    }
+  }
+
+  const featuredList = cars.filter(car => car.isFeatured).slice(0, 3)
+  const finalFeatured = featuredList.length > 0 ? featuredList : cars.slice(0, 3)
+
+  const getHandpickedCars = () => {
+    if (handpickedTab === 'featured') {
+      const list = cars.filter(car => car.isFeatured)
+      return list.length > 0 ? list.slice(0, 6) : cars.slice(0, 6)
+    } else if (handpickedTab === 'latest') {
+      return [...cars].sort((a, b) => b.id - a.id).slice(0, 6)
+    } else if (handpickedTab === 'premium') {
+      return [...cars].sort((a, b) => b.price - a.price).slice(0, 6)
+    }
+    return cars.slice(0, 6)
+  }
+  const finalHandpicked = getHandpickedCars()
 
   // Fixed interest rate at 9% p.a.
   const interestRate = 9 
@@ -99,29 +145,28 @@ export default function Home() {
 
             {/* Buttons */}
             <div className="flex flex-wrap gap-4 mb-12">
-              <a
-                href="#inventory"
-                className="bg-white hover:bg-slate-100 text-slate-950 font-bold px-6 py-3.5 rounded flex items-center space-x-2 transition-all text-sm"
+              <button
+                onClick={() => onNavigate && onNavigate('buy')}
+                className="bg-white hover:bg-slate-100 text-slate-950 font-bold px-6 py-3.5 rounded flex items-center space-x-2 transition-all text-sm cursor-pointer"
               >
                 <span>Explore Inventory</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-              </a>
-              <a
-                href="#sell"
-                className="border border-slate-600 hover:border-white text-white font-bold px-6 py-3.5 rounded transition-all text-sm"
+              </button>
+              <button
+                onClick={() => onNavigate && onNavigate('sell')}
+                className="border border-slate-600 hover:border-white text-white font-bold px-6 py-3.5 rounded transition-all text-sm cursor-pointer"
               >
                 Sell Your Car
-              </a>
+              </button>
             </div>
           </div>
         </div>
 
         {/* Filter Widget (Centered overlay at bottom of Hero) */}
         <div className="max-w-7xl mx-auto w-full relative z-20 mt-4">
-          <div className="bg-slate-950/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 shadow-2xl">
-            {/* Search Input Row */}
+          <div className="bg-slate-950/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 shadow-2xl">            {/* Search Input Row */}
             <div className="relative mb-5 max-w-md">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -131,7 +176,8 @@ export default function Home() {
               <input
                 type="text"
                 placeholder="Search"
-                className="w-full bg-slate-900/60 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                onClick={() => onNavigate && onNavigate('buy')}
+                className="w-full bg-slate-900/60 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 cursor-pointer"
               />
             </div>
 
@@ -141,7 +187,11 @@ export default function Home() {
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Brand</label>
                 <div className="relative">
-                  <select className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer">
+                  <select 
+                    onClick={() => onNavigate && onNavigate('buy')} 
+                    onChange={() => onNavigate && onNavigate('buy')}
+                    className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
                     <option>Any Brand</option>
                     <option>Mercedes-Benz</option>
                     <option>BMW</option>
@@ -161,7 +211,11 @@ export default function Home() {
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Model</label>
                 <div className="relative">
-                  <select className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer">
+                  <select 
+                    onClick={() => onNavigate && onNavigate('buy')} 
+                    onChange={() => onNavigate && onNavigate('buy')}
+                    className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
                     <option>Any Model</option>
                     <option>Sedan</option>
                     <option>SUV</option>
@@ -180,7 +234,11 @@ export default function Home() {
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Budget</label>
                 <div className="relative">
-                  <select className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer">
+                  <select 
+                    onClick={() => onNavigate && onNavigate('buy')} 
+                    onChange={() => onNavigate && onNavigate('buy')}
+                    className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
                     <option>Any Budget</option>
                     <option>Under 10L</option>
                     <option>10L - 25L</option>
@@ -199,7 +257,11 @@ export default function Home() {
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Fuel Type</label>
                 <div className="relative">
-                  <select className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer">
+                  <select 
+                    onClick={() => onNavigate && onNavigate('buy')} 
+                    onChange={() => onNavigate && onNavigate('buy')}
+                    className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
                     <option>Any Fuel</option>
                     <option>Petrol</option>
                     <option>Diesel</option>
@@ -218,13 +280,17 @@ export default function Home() {
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Transmission</label>
                 <div className="relative">
-                  <select className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer">
+                  <select 
+                    onClick={() => onNavigate && onNavigate('buy')} 
+                    onChange={() => onNavigate && onNavigate('buy')}
+                    className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
                     <option>Any Type</option>
                     <option>Automatic</option>
                     <option>Manual</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-slate-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2050/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </div>
@@ -235,7 +301,11 @@ export default function Home() {
               <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Location</label>
                 <div className="relative">
-                  <select className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer">
+                  <select 
+                    onClick={() => onNavigate && onNavigate('buy')} 
+                    onChange={() => onNavigate && onNavigate('buy')}
+                    className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
+                  >
                     <option>Any City</option>
                     <option>Mumbai</option>
                     <option>Delhi NCR</option>
@@ -244,7 +314,7 @@ export default function Home() {
                     <option>Chennai</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-slate-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2050/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </div>
@@ -265,21 +335,24 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-extrabold text-white">Popular Marques</h2>
               <p className="text-slate-400 mt-2 text-sm">Browse our collection by your favorite luxury automotive brand.</p>
             </div>
-            <a 
-              href="#all-brands" 
-              className="inline-flex items-center text-slate-300 hover:text-amber-400 font-semibold text-sm transition-colors mt-4 md:mt-0"
+            <button 
+              onClick={() => onNavigate && onNavigate('buy')}
+              className="inline-flex items-center text-slate-300 hover:text-amber-400 font-semibold text-sm transition-colors mt-4 md:mt-0 cursor-pointer"
             >
               <span>View All</span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
-            </a>
+            </button>
           </div>
 
           {/* Brands Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
             {/* Mercedes-Benz */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer">
+            <div 
+              onClick={() => onNavigate && onNavigate('buy')}
+              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
+            >
               <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 2v20M12 12l-8.66 5M12 12l8.66 5" />
@@ -288,7 +361,10 @@ export default function Home() {
             </div>
 
             {/* BMW */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer">
+            <div 
+              onClick={() => onNavigate && onNavigate('buy')}
+              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
+            >
               <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
                 <circle cx="12" cy="12" r="10" />
                 <circle cx="12" cy="12" r="6" strokeDasharray="2 2" />
@@ -298,7 +374,10 @@ export default function Home() {
             </div>
 
             {/* Audi */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer">
+            <div 
+              onClick={() => onNavigate && onNavigate('buy')}
+              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
+            >
               <svg className="w-14 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="6" cy="12" r="3" />
                 <circle cx="10" cy="12" r="3" />
@@ -309,7 +388,10 @@ export default function Home() {
             </div>
 
             {/* Toyota */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer">
+            <div 
+              onClick={() => onNavigate && onNavigate('buy')}
+              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
+            >
               <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
                 <ellipse cx="12" cy="12" rx="10" ry="7" />
                 <ellipse cx="12" cy="10" rx="6" ry="4" />
@@ -319,7 +401,10 @@ export default function Home() {
             </div>
 
             {/* Honda */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer">
+            <div 
+              onClick={() => onNavigate && onNavigate('buy')}
+              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
+            >
               <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <rect x="4" y="4" width="16" height="16" rx="3" />
                 <path d="M7 6v12h2v-5h6v5h2V6h-2v5H9V6H7z" />
@@ -328,8 +413,11 @@ export default function Home() {
             </div>
 
             {/* Hyundai */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer">
-              <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+            <div 
+              onClick={() => onNavigate && onNavigate('buy')}
+              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
+            >
+              <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.2">
                 <ellipse cx="12" cy="12" rx="10" ry="7" transform="rotate(-10 12 12)" />
                 <path d="M8 8.5l2 7h2v-4.5h2v4.5h2l-2-7" strokeLinecap="round" />
               </svg>
@@ -354,220 +442,88 @@ export default function Home() {
           </div>
 
           {/* Vehicles Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Mercedes-Benz GLC */}
-            <div className="bg-black border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-all duration-300 flex flex-col justify-between group">
-              <div className="relative overflow-hidden aspect-[4/3] bg-slate-900 flex items-center justify-center">
-                <img 
-                  src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&q=80&w=800" 
-                  alt="Mercedes-Benz GLC" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-6 text-left flex flex-col justify-between flex-grow">
-                <div>
-                  <div className="flex justify-between items-start mb-4">
+          {loading ? (
+            <div className="text-center py-20 text-slate-500 font-normal">Loading featured catalog...</div>
+          ) : finalFeatured.length === 0 ? (
+            <div className="text-center py-20 text-slate-500 font-normal">No vehicles found in database inventory.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {finalFeatured.map((car) => (
+                <div key={car.id} className="bg-black border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-all duration-300 flex flex-col justify-between group">
+                  <div className="relative overflow-hidden aspect-[4/3] bg-slate-900 flex items-center justify-center">
+                    <img 
+                      src={car.imageUrl} 
+                      alt={`${car.brand} ${car.model}`} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-6 text-left flex flex-col justify-between flex-grow">
                     <div>
-                      <span className="text-xs text-slate-400 uppercase tracking-wider">Mercedes-Benz</span>
-                      <h3 className="text-lg font-bold text-white mt-0.5">GLC 220d 4MATIC</h3>
-                    </div>
-                    <span className="text-lg font-black text-amber-500">₹56,75,000</span>
-                  </div>
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <span className="text-xs text-slate-400 uppercase tracking-wider">{car.brand}</span>
+                          <h3 className="text-lg font-bold text-white mt-0.5">{car.brand} {car.model}</h3>
+                        </div>
+                        <span className="text-lg font-black text-amber-500">₹{(car.price / 100000).toFixed(2)} L</span>
+                      </div>
 
-                  {/* Specs */}
-                  <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-900 text-[11px] text-slate-400 font-medium mb-4">
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <span>2021</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
-                        <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
-                      </svg>
-                      <span>32,500 km</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
-                        <path d="M9 6h2v3H9z" />
-                      </svg>
-                      <span>Diesel</span>
-                    </div>
-                  </div>
+                      {/* Specs */}
+                      <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-900 text-[11px] text-slate-400 font-medium mb-4">
+                        <div className="flex items-center space-x-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                          </svg>
+                          <span>{car.year}</span>
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
+                            <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
+                          </svg>
+                          <span>{car.kmDriven.toLocaleString()} km</span>
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
+                            <path d="M9 6h2v3H9z" />
+                          </svg>
+                          <span>{car.fuelType}</span>
+                        </div>
+                      </div>
 
-                  {/* Location */}
-                  <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>Bangalore</span>
+                      {/* Location */}
+                      <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Mumbai</span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex space-x-3 w-full mt-auto">
+                      <button 
+                        onClick={() => { setSelectedCar(car); setActiveAngle(0); }}
+                        className="flex-1 text-center border border-slate-700 hover:border-slate-500 text-white rounded px-4 py-2.5 text-xs font-semibold transition-all cursor-pointer"
+                      >
+                        View Details
+                      </button>
+                      <button 
+                        onClick={() => { if (onNavigate) onNavigate('finance'); }}
+                        className="flex-1 text-center bg-white hover:bg-slate-100 text-slate-950 rounded px-4 py-2.5 text-xs font-bold transition-all cursor-pointer"
+                      >
+                        Book Test Drive
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Actions */}
-                <div className="flex space-x-3 w-full mt-auto">
-                  <a href="#details" className="flex-1 text-center border border-slate-700 hover:border-slate-500 text-white rounded px-4 py-2.5 text-xs font-semibold transition-all">
-                    View Details
-                  </a>
-                  <a href="#test-drive" className="flex-1 text-center bg-white hover:bg-slate-100 text-slate-950 rounded px-4 py-2.5 text-xs font-bold transition-all">
-                    Book Test Drive
-                  </a>
-                </div>
-              </div>
+              ))}
             </div>
-
-            {/* Range Rover Autobiography */}
-            <div className="bg-black border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-all duration-300 flex flex-col justify-between group">
-              <div className="relative overflow-hidden aspect-[4/3] bg-slate-900 flex items-center justify-center">
-                <img 
-                  src="https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?auto=format&fit=crop&q=80&w=800" 
-                  alt="Range Rover Autobiography" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-6 text-left flex flex-col justify-between flex-grow">
-                <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <span className="text-xs text-slate-400 uppercase tracking-wider">Range Rover</span>
-                      <h3 className="text-lg font-bold text-white mt-0.5">Autobiography LWB</h3>
-                    </div>
-                    <span className="text-lg font-black text-amber-500">₹81,75,000</span>
-                  </div>
-
-                  {/* Specs */}
-                  <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-900 text-[11px] text-slate-400 font-medium mb-4">
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <span>2022</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
-                        <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
-                      </svg>
-                      <span>28,000 km</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
-                        <path d="M9 6h2v3H9z" />
-                      </svg>
-                      <span>Diesel</span>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>Los Angeles</span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex space-x-3 w-full mt-auto">
-                  <a href="#details" className="flex-1 text-center border border-slate-700 hover:border-slate-500 text-white rounded px-4 py-2.5 text-xs font-semibold transition-all">
-                    View Details
-                  </a>
-                  <a href="#test-drive" className="flex-1 text-center bg-white hover:bg-slate-100 text-slate-950 rounded px-4 py-2.5 text-xs font-bold transition-all">
-                    Book Test Drive
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Audi A6 */}
-            <div className="bg-black border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-all duration-300 flex flex-col justify-between group">
-              <div className="relative overflow-hidden aspect-[4/3] bg-slate-900 flex items-center justify-center">
-                {/* Badges */}
-                <div className="absolute top-4 left-4 z-10 flex items-center space-x-2">
-                  <span className="bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded">
-                    FEATURED
-                  </span>
-                  <span className="bg-slate-900/80 text-slate-100 text-[10px] font-bold px-3 py-1 rounded backdrop-blur-sm">
-                    PREMIUM
-                  </span>
-                </div>
-                <img 
-                  src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=800" 
-                  alt="Audi A6" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-6 text-left flex flex-col justify-between flex-grow">
-                <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <span className="text-xs text-slate-400 uppercase tracking-wider">Audi</span>
-                      <h3 className="text-lg font-bold text-white mt-0.5">A6 Premium Plus 45 TFSI</h3>
-                    </div>
-                    <span className="text-lg font-black text-amber-500">₹48,90,000</span>
-                  </div>
-
-                  {/* Specs */}
-                  <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-900 text-[11px] text-slate-400 font-medium mb-4">
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <span>2022</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
-                        <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
-                      </svg>
-                      <span>28,000 km</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
-                        <path d="M9 6h2v3H9z" />
-                      </svg>
-                      <span>Petrol</span>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>Bangalore</span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex space-x-3 w-full mt-auto">
-                  <a href="#details" className="flex-1 text-center border border-slate-700 hover:border-slate-500 text-white rounded px-4 py-2.5 text-xs font-semibold transition-all">
-                    View Details
-                  </a>
-                  <a href="#test-drive" className="flex-1 text-center bg-white hover:bg-slate-100 text-slate-950 rounded px-4 py-2.5 text-xs font-bold transition-all">
-                    Book Test Drive
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -587,410 +543,108 @@ export default function Home() {
 
           {/* Category Tabs */}
           <div className="flex space-x-2 bg-slate-100/80 p-1 rounded-full max-w-xs mb-12 border border-slate-200/50 backdrop-blur-sm">
-            <button className="bg-slate-950 text-white px-5 py-1.5 rounded-full text-xs font-semibold shadow-sm cursor-pointer">
+            <button 
+              onClick={() => setHandpickedTab('featured')}
+              className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                handpickedTab === 'featured' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
               Featured
             </button>
-            <button className="text-slate-500 hover:text-slate-800 px-5 py-1.5 text-xs font-semibold transition-colors cursor-pointer">
+            <button 
+              onClick={() => setHandpickedTab('latest')}
+              className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                handpickedTab === 'latest' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
               Latest
             </button>
-            <button className="text-slate-500 hover:text-slate-800 px-5 py-1.5 text-xs font-semibold transition-colors cursor-pointer">
+            <button 
+              onClick={() => setHandpickedTab('premium')}
+              className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                handpickedTab === 'premium' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
               Premium
             </button>
           </div>
 
           {/* Handpicked Vehicles Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Card 1: Tata Harrier */}
-            <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col justify-between group shadow-sm">
-              <div className="relative overflow-hidden aspect-[4/3] bg-slate-50 flex items-center justify-center p-4">
-                <img 
-                  src={a1} 
-                  alt="Tata Harrier" 
-                  className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-6 text-left flex flex-col justify-between flex-grow">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-950">Tata Harrier</h3>
-                  <span className="text-xs text-slate-500 font-medium">2025 · 1st Owner</span>
-
-                  {/* Specs */}
-                  <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-100 text-[11px] text-slate-500 font-medium my-4">
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <span>2025</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
-                        <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
-                      </svg>
-                      <span>28,000 km</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
-                        <path d="M9 6h2v3H9z" />
-                      </svg>
-                      <span>Diesel</span>
-                    </div>
+          {loading ? (
+            <div className="text-center py-20 text-slate-500 font-normal">Loading catalog...</div>
+          ) : finalHandpicked.length === 0 ? (
+            <div className="text-center py-20 text-slate-500 font-normal">No vehicles found in database inventory.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {finalHandpicked.map((car) => (
+                <div key={car.id} className="bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col justify-between group shadow-sm">
+                  <div className="relative overflow-hidden aspect-[4/3] bg-slate-50 flex items-center justify-center p-4">
+                    <img 
+                      src={car.imageUrl} 
+                      alt={`${car.brand} ${car.model}`} 
+                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
+                  <div className="p-6 text-left flex flex-col justify-between flex-grow">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-950">{car.brand} {car.model}</h3>
+                      <span className="text-xs text-slate-500 font-medium">{car.year} &bull; 1st Owner</span>
 
-                  {/* Location */}
-                  <div className="flex items-center space-x-1.5 text-xs text-slate-500 font-medium mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>Los Angeles</span>
+                      {/* Specs */}
+                      <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-100 text-[11px] text-slate-500 font-medium my-4">
+                        <div className="flex items-center space-x-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                          </svg>
+                          <span>{car.year}</span>
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
+                            <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
+                          </svg>
+                          <span>{car.kmDriven.toLocaleString()} km</span>
+                        </div>
+                        <div className="flex items-center space-x-1.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
+                            <path d="M9 6h2v3H9z" />
+                          </svg>
+                          <span>{car.fuelType}</span>
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      <div className="flex items-center space-x-1.5 text-xs text-slate-500 font-medium mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Mumbai</span>
+                      </div>
+                    </div>
+
+                    {/* Price and Action Row */}
+                    <div className="flex justify-between items-center mt-auto border-t border-slate-5 pt-4">
+                      <div className="flex flex-col text-left">
+                        <span className="text-xl font-extrabold text-slate-950">₹{(car.price / 100000).toFixed(2)} L</span>
+                        <span className="text-[10px] text-slate-400 mt-0.5">EMI starts at ₹32,000/mo</span>
+                      </div>
+                      <button 
+                        onClick={() => { setSelectedCar(car); setActiveAngle(0); }}
+                        className="bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold px-6 py-2.5 rounded-full transition-all cursor-pointer"
+                      >
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Price and Action Row */}
-                <div className="flex justify-between items-center mt-auto border-t border-slate-5 pt-4">
-                  <div className="flex flex-col text-left">
-                    <span className="text-xl font-extrabold text-slate-950">₹18.50 L</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">EMI ₹30,285/mo</span>
-                  </div>
-                  <a href="#view-harrier" className="bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold px-6 py-2.5 rounded-full transition-all">
-                    View
-                  </a>
-                </div>
-              </div>
+              ))}
             </div>
-
-            {/* Card 2: BMW X1 sDrive20d */}
-            <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col justify-between group shadow-sm relative">
-              {/* Heart Button Badge */}
-              <button className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow hover:bg-white text-rose-500 transition-colors z-10">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </button>
-
-              <div className="relative overflow-hidden aspect-[4/3] bg-slate-50 flex items-center justify-center p-4">
-                <img 
-                  src={a3} 
-                  alt="BMW X1 sDrive20d" 
-                  className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-6 text-left flex flex-col justify-between flex-grow">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-950">BMW X1 sDrive20d</h3>
-                  <span className="text-xs text-slate-500 font-medium">2022 · 1st Owner</span>
-
-                  {/* Specs */}
-                  <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-100 text-[11px] text-slate-500 font-medium my-4">
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <span>2022</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
-                        <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
-                      </svg>
-                      <span>38,000 km</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
-                        <path d="M9 6h2v3H9z" />
-                      </svg>
-                      <span>Diesel</span>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>Los Angeles</span>
-                  </div>
-                </div>
-
-                {/* Price and Action Row */}
-                <div className="flex justify-between items-center mt-auto border-t border-slate-5 pt-4">
-                  <div className="flex flex-col text-left">
-                    <span className="text-xl font-extrabold text-slate-950">₹23.90 L</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">EMI ₹43,200/mo</span>
-                  </div>
-                  <a href="#view-bmw" className="bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold px-6 py-2.5 rounded-full transition-all">
-                    View
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Toyota Fortuner Legender */}
-            <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col justify-between group shadow-sm">
-              <div className="relative overflow-hidden aspect-[4/3] bg-slate-50 flex items-center justify-center p-4">
-                <img 
-                  src={a4} 
-                  alt="Toyota Fortuner Legender" 
-                  className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-6 text-left flex flex-col justify-between flex-grow">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-950">2022 Toyota Fortuner Legender</h3>
-                  <span className="text-xs text-slate-500 font-medium">Toyota · Fortuner Legender · 2022</span>
-
-                  {/* Specs */}
-                  <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-100 text-[11px] text-slate-500 font-medium my-4">
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <span>2022</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
-                        <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
-                      </svg>
-                      <span>28,000 km</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
-                        <path d="M9 6h2v3H9z" />
-                      </svg>
-                      <span>Diesel</span>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="flex items-center space-x-1.5 text-xs text-slate-500 font-medium mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>Los Angeles</span>
-                  </div>
-                </div>
-
-                {/* Price and Action Row */}
-                <div className="flex justify-between items-center mt-auto border-t border-slate-5 pt-4">
-                  <div className="flex flex-col text-left">
-                    <span className="text-xl font-extrabold text-slate-950">₹39.00 L</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">EMI ₹58,200/mo</span>
-                  </div>
-                  <a href="#view-fortuner" className="bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold px-6 py-2.5 rounded-full transition-all">
-                    View
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 4: Honda Elevate */}
-            <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col justify-between group shadow-sm">
-              <div className="relative overflow-hidden aspect-[4/3] bg-slate-50 flex items-center justify-center p-4">
-                <img 
-                  src={a5} 
-                  alt="Honda Elevate" 
-                  className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-6 text-left flex flex-col justify-between flex-grow">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-950">2024 Honda Elevate ZX CVT</h3>
-                  <span className="text-xs text-slate-500 font-medium">2024 · 1st Owner</span>
-
-                  {/* Specs */}
-                  <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-100 text-[11px] text-slate-500 font-medium my-4">
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <span>2024</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
-                        <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
-                      </svg>
-                      <span>15,450 km</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
-                        <path d="M9 6h2v3H9z" />
-                      </svg>
-                      <span>Petrol</span>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-medium mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>Kochi, Kerala</span>
-                  </div>
-                </div>
-
-                {/* Price and Action Row */}
-                <div className="flex justify-between items-center mt-auto border-t border-slate-5 pt-4">
-                  <div className="flex flex-col text-left">
-                    <span className="text-xl font-extrabold text-slate-950">₹15.95 L</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">EMI ₹28,950/mo</span>
-                  </div>
-                  <a href="#view-elevate" className="bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold px-6 py-2.5 rounded-full transition-all">
-                    View
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 5: Hyundai Creta */}
-            <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col justify-between group shadow-sm">
-              <div className="relative overflow-hidden aspect-[4/3] bg-slate-50 flex items-center justify-center p-4">
-                <img 
-                  src={a6} 
-                  alt="Hyundai Creta" 
-                  className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-6 text-left flex flex-col justify-between flex-grow">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-950">2023 Hyundai Creta SX(O) IVT</h3>
-                  <span className="text-xs text-slate-500 font-medium">22,350 km</span>
-
-                  {/* Specs */}
-                  <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-100 text-[11px] text-slate-500 font-medium my-4">
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <span>2023</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
-                        <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
-                      </svg>
-                      <span>22,350 km</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
-                        <path d="M9 6h2v3H9z" />
-                      </svg>
-                      <span>Petrol</span>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="flex items-center space-x-1.5 text-xs text-slate-500 font-medium mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>Kochi, Kerala</span>
-                  </div>
-                </div>
-
-                {/* Price and Action Row */}
-                <div className="flex justify-between items-center mt-auto border-t border-slate-5 pt-4">
-                  <div className="flex flex-col text-left">
-                    <span className="text-xl font-extrabold text-slate-950">₹16.80 L</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">EMI ₹31,850/mo</span>
-                  </div>
-                  <a href="#view-creta" className="bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold px-6 py-2.5 rounded-full transition-all">
-                    View
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 6: Kia Seltos */}
-            <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col justify-between group shadow-sm">
-              <div className="relative overflow-hidden aspect-[4/3] bg-slate-50 flex items-center justify-center p-4">
-                <img 
-                  src={a7} 
-                  alt="Kia Seltos" 
-                  className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-6 text-left flex flex-col justify-between flex-grow">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-950">2022 Kia Seltos GTX+ DCT</h3>
-                  <span className="text-xs text-slate-500 font-medium">2022 · 1st Owner</span>
-
-                  {/* Specs */}
-                  <div className="grid grid-cols-3 gap-2 py-4 border-t border-b border-slate-100 text-[11px] text-slate-500 font-medium my-4">
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                      <span>2022</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M12 2a10 10 0 00-7.07 17.07L12 12V4" />
-                        <path d="M19.07 19.07A10 10 0 0012 2" strokeDasharray="2 2" />
-                      </svg>
-                      <span>22,000 km</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path d="M3 22h12M4 2v15h10V2H4zM14 9h3a2 2 0 012 2v6a2 2 0 002 2h1" />
-                        <path d="M9 6h2v3H9z" />
-                      </svg>
-                      <span>Petrol</span>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="flex items-center space-x-1.5 text-xs text-slate-500 font-medium mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>Ernakulam, Kerala</span>
-                  </div>
-                </div>
-
-                {/* Price and Action Row */}
-                <div className="flex justify-between items-center mt-auto border-t border-slate-5 pt-4">
-                  <div className="flex flex-col text-left">
-                    <span className="text-xl font-extrabold text-slate-950">₹15.25 L</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">EMI ₹29,150/mo</span>
-                  </div>
-                  <a href="#view-seltos" className="bg-slate-950 hover:bg-slate-800 text-white text-xs font-semibold px-6 py-2.5 rounded-full transition-all">
-                    View
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -1085,7 +739,10 @@ export default function Home() {
               </div>
 
               {/* Apply Button */}
-              <button className="w-full py-3.5 bg-transparent border border-slate-700 hover:border-slate-500 hover:bg-slate-900 text-white rounded-lg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer">
+              <button 
+                onClick={() => onNavigate && onNavigate('finance')}
+                className="w-full py-3.5 bg-transparent border border-slate-700 hover:border-slate-500 hover:bg-slate-900 text-white rounded-lg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+              >
                 Apply for Finance
               </button>
             </div>
@@ -1261,15 +918,15 @@ export default function Home() {
             </div>
 
             {/* CTA Button */}
-            <a 
-              href="#valuation" 
-              className="inline-flex items-center space-x-2 bg-[#E05E1B] hover:bg-[#c95013] text-white px-6 py-3.5 rounded font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-950/20"
+            <button 
+              onClick={() => onNavigate && onNavigate('sell')}
+              className="inline-flex items-center space-x-2 bg-[#E05E1B] hover:bg-[#c95013] text-white px-6 py-3.5 rounded font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-950/20 cursor-pointer"
             >
               <span>Get Free Valuation</span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
-            </a>
+            </button>
           </div>
 
           {/* Right Column: Visual Mockup */}
@@ -1316,15 +973,15 @@ export default function Home() {
           </div>
 
           {/* CTA button */}
-          <a 
-            href="#register" 
-            className="inline-flex items-center space-x-2 bg-[#E05E1B] hover:bg-[#c95013] text-white px-8 py-3.5 rounded font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-950/20"
+          <button 
+            onClick={() => onNavigate && onNavigate('dealers')}
+            className="inline-flex items-center space-x-2 bg-[#E05E1B] hover:bg-[#c95013] text-white px-8 py-3.5 rounded font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-950/20 cursor-pointer"
           >
             <span>Register as Dealer</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
-          </a>
+          </button>
         </div>
       </section>
 
@@ -1389,6 +1046,189 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* 360° VEHICLE DETAILS OVERLAY MODAL */}
+      {selectedCar && (
+        <div className="fixed inset-0 z-55 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col lg:flex-row relative text-left text-slate-100">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setSelectedCar(null)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-full p-2.5 z-55 transition-colors cursor-pointer text-sm"
+              title="Close Panel"
+            >
+              ✕
+            </button>
+
+            {/* Left Box: 360° Virtual Tour Interactive Viewer */}
+            <div className="w-full lg:w-1/2 bg-slate-950 p-8 flex flex-col justify-between border-r border-slate-800/60 relative">
+              <div>
+                <span className="text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/25 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+                  Interactive 360° View
+                </span>
+                <h3 className="text-lg font-serif font-bold text-white mt-4">Virtual Tour Rotation</h3>
+                <p className="text-[10px] text-slate-500 mt-1">Slide or use preset rotation angles to rotate vehicle perspectives.</p>
+              </div>
+
+              {/* Rotatable Vehicle Container */}
+              <div className="my-10 relative overflow-hidden flex items-center justify-center h-64 border border-slate-850/60 rounded-2xl bg-slate-950/80">
+                <img 
+                  src={selectedCar.imageUrl} 
+                  alt={selectedCar.model}
+                  style={getRotateStyle()}
+                  className="max-h-full max-w-full object-contain pointer-events-none"
+                />
+
+                {/* Dashboard Badge Overlay when viewing interior */}
+                {activeAngle === 270 && (
+                  <div className="absolute inset-0 bg-slate-950/60 flex flex-col items-center justify-center p-6 text-center transition-opacity">
+                    <span className="text-lg font-black text-amber-500 font-serif uppercase tracking-widest">Dash Interior View</span>
+                    <p className="text-[10px] text-slate-300 mt-2 max-w-xs leading-relaxed">
+                      Premium Hand-Stitched Leather Layout &bull; Ambient Lighting Console &bull; Integrated Touch Interface
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Angle Slider and Controls */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <span>Perspective Rotation Angle</span>
+                  <span className="text-amber-500">{activeAngle}°</span>
+                </div>
+
+                <input 
+                  type="range"
+                  min="0"
+                  max="315"
+                  step="45"
+                  value={activeAngle}
+                  onChange={(e) => setActiveAngle(Number(e.target.value))}
+                  className="w-full accent-amber-600 cursor-pointer"
+                />
+
+                {/* Angle Preset Buttons */}
+                <div className="grid grid-cols-4 gap-2 pt-2">
+                  <button 
+                    onClick={() => setActiveAngle(0)}
+                    className={`py-2 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                      activeAngle === 0 ? 'bg-amber-600 text-white shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'
+                    }`}
+                  >
+                    Front
+                  </button>
+                  <button 
+                    onClick={() => setActiveAngle(90)}
+                    className={`py-2 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                      activeAngle === 90 ? 'bg-amber-600 text-white shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'
+                    }`}
+                  >
+                    Side
+                  </button>
+                  <button 
+                    onClick={() => setActiveAngle(180)}
+                    className={`py-2 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                      activeAngle === 180 ? 'bg-amber-600 text-white shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'
+                    }`}
+                  >
+                    Rear
+                  </button>
+                  <button 
+                    onClick={() => setActiveAngle(270)}
+                    className={`py-2 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                      activeAngle === 270 ? 'bg-amber-600 text-white shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'
+                    }`}
+                  >
+                    Interior
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Box: Spec Details & Actions */}
+            <div className="w-full lg:w-1/2 p-8 flex flex-col justify-between">
+              <div>
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{selectedCar.brand}</span>
+                <h2 className="text-2xl font-serif font-bold text-white mt-1">{selectedCar.brand} {selectedCar.model}</h2>
+                <div className="mt-3 flex items-baseline space-x-2">
+                  <span className="text-xl font-black text-amber-500">₹{(selectedCar.price / 100000).toFixed(2)} Lakh</span>
+                  <span className="text-[10px] text-slate-500">(Fixed Price + GST Invoiced)</span>
+                </div>
+
+                {/* Spec sheets */}
+                <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-850">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Model Year</span>
+                    <p className="text-xs text-slate-200 mt-1 font-semibold">{selectedCar.year}</p>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Kilometers Driven</span>
+                    <p className="text-xs text-slate-200 mt-1 font-semibold">{selectedCar.kmDriven.toLocaleString()} km</p>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Fuel Type</span>
+                    <p className="text-xs text-slate-200 mt-1 font-semibold">{selectedCar.fuelType}</p>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Transmission</span>
+                    <p className="text-xs text-slate-200 mt-1 font-semibold">{selectedCar.transmission}</p>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Body Color</span>
+                    <p className="text-xs text-slate-200 mt-1 font-semibold">{selectedCar.color}</p>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Registration Hub</span>
+                    <p className="text-xs text-slate-200 mt-1 font-semibold">MH-01 (Mumbai South)</p>
+                  </div>
+                </div>
+
+                {/* Premium features highlights checklist */}
+                <div className="mt-6 pt-6 border-t border-slate-850">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-3">Premium Features Checklist</span>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 font-normal">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-emerald-500">✓</span>
+                      <span>Panoramic Moonroof</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-emerald-500">✓</span>
+                      <span>Adaptive Cruise Control</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-emerald-500">✓</span>
+                      <span>Nappa Leather Seats</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-emerald-500">✓</span>
+                      <span>LED Ambient Lighting</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Booking CTAs */}
+              <div className="mt-8 pt-6 border-t border-slate-850 flex gap-4">
+                <button 
+                  onClick={() => { setSelectedCar(null); if (onNavigate) onNavigate('finance'); }}
+                  className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md text-center cursor-pointer"
+                >
+                  Book Test Drive
+                </button>
+                <button 
+                  onClick={() => window.open('https://wa.me/919999999999', '_blank')}
+                  className="flex-1 border border-slate-850 hover:bg-slate-800 text-slate-300 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors text-center cursor-pointer"
+                >
+                  Contact Advisor
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   )
 }
