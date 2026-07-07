@@ -32,7 +32,6 @@ namespace CarSellApi.Models
         [MaxLength(100)]
         public string Transmission { get; set; } = "Automatic";
 
-        [MaxLength(500)]
         public string ImageUrl { get; set; } = string.Empty;
 
         public bool IsFeatured { get; set; } = false;
