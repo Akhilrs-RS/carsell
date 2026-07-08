@@ -8,8 +8,18 @@ import f4 from '../assets/f4.png'
 import f5 from '../assets/f5.png'
 import f6 from '../assets/f6.jpg'
 
-export default function Blog() {
+export default function Blog({ onNavigate, setInitialSearchQuery }) {
   const [searchQuery, setSearchQuery] = useState('')
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault()
+    if (setInitialSearchQuery) {
+      setInitialSearchQuery(searchQuery)
+    }
+    if (onNavigate) {
+      onNavigate('buy')
+    }
+  }
 
   return (
     <div className="bg-slate-50 text-slate-900 min-h-screen pb-24">
@@ -47,7 +57,7 @@ export default function Blog() {
             </p>
 
             {/* Search Box Row */}
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md w-full">
+            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md w-full">
               <div className="relative flex-grow">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -62,10 +72,13 @@ export default function Blog() {
                   className="w-full bg-slate-900/60 border border-slate-800 rounded-full py-2.5 pl-10 pr-4 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-white focus:ring-1 focus:ring-white"
                 />
               </div>
-              <button className="bg-white hover:bg-slate-100 text-slate-950 font-bold px-6 py-2.5 rounded-full text-xs transition-all shadow-md">
+              <button 
+                type="submit"
+                className="bg-white hover:bg-slate-100 text-slate-950 font-bold px-6 py-2.5 rounded-full text-xs transition-all shadow-md cursor-pointer"
+              >
                 Search
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </section>

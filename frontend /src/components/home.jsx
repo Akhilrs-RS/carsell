@@ -2,15 +2,65 @@ import React, { useState, useEffect } from 'react'
 import hpImg from '../assets/hp.png'
 import iVideo from '../assets/i.mp4'
 
-export default function Home({ onNavigate }) {
+export default function Home({ onNavigate, onBookTestDrive, setInitialSearchQuery, setInitialFilters }) {
   const API_BASE = `http://${window.location.hostname}:5080/api`
   const [cars, setCars] = useState([])
   const [loading, setLoading] = useState(false)
-  const [handpickedTab, setHandpickedTab] = useState('featured')
+  const [handpickedTab, setHandpickedTab] = useState('all')
+  const [heroQuery, setHeroQuery] = useState('')
+
+  const [heroBrand, setHeroBrand] = useState('Any Brand')
+  const [heroModel, setHeroModel] = useState('Any Model')
+  const [heroBudget, setHeroBudget] = useState('Any Budget')
+  const [heroFuel, setHeroFuel] = useState('Any Fuel')
+  const [heroTransmission, setHeroTransmission] = useState('Any Type')
+
+  const handleHeroSearch = (e) => {
+    if (e) e.preventDefault()
+    if (setInitialSearchQuery) {
+      setInitialSearchQuery(heroQuery)
+    }
+    if (onNavigate) {
+      onNavigate('buy')
+    }
+  }
+
+  const handleHeroFilterSubmit = () => {
+    let priceVal = 'All'
+    if (heroBudget === 'Under 10L') priceVal = '10'
+    else if (heroBudget === '10L - 25L') priceVal = '25'
+    else if (heroBudget === '25L - 50L') priceVal = '50'
+    else if (heroBudget === 'Above 50L') priceVal = '200'
+
+    if (setInitialFilters) {
+      setInitialFilters({
+        brand: heroBrand,
+        model: heroModel,
+        price: priceVal,
+        fuel: heroFuel,
+        transmission: heroTransmission
+      })
+    }
+    if (onNavigate) {
+      onNavigate('buy')
+    }
+  }
   
   // 360 Details Modal
   const [selectedCar, setSelectedCar] = useState(null)
   const [activeAngle, setActiveAngle] = useState(0)
+
+  let parsedImages = []
+  try {
+    parsedImages = JSON.parse(selectedCar?.imagesJson || '[]')
+  } catch (e) {
+    parsedImages = []
+  }
+  const hasMultiImages = parsedImages.length > 0 && parsedImages.some(img => img !== '')
+  const activeIndex = activeAngle / 45
+  const activeImgSrc = (hasMultiImages && parsedImages[activeIndex]) 
+    ? parsedImages[activeIndex] 
+    : selectedCar?.imageUrl
 
   // State for interactive EMI calculator
   const [loanAmount, setLoanAmount] = useState(50) // in Lakhs
@@ -24,9 +74,9 @@ export default function Home({ onNavigate }) {
     setLoading(true)
     try {
       const res = await fetch(`${API_BASE}/cars`)
-      if (res.ok) {
-        setCars(await res.json())
-      }
+      if (!res.ok) throw new Error('Failed to fetch cars')
+      const data = await res.json()
+      setCars(data)
     } catch (err) {
       console.error('Failed to load cars list for home page', err)
     } finally {
@@ -40,6 +90,12 @@ export default function Home({ onNavigate }) {
 
   // Dynamic 360° perspective rotation simulation styles
   const getRotateStyle = () => {
+    if (hasMultiImages) {
+      return {
+        transition: 'transform 0.3s ease, filter 0.3s ease',
+        transformOrigin: 'center center'
+      }
+    }
     return {
       transform: `perspective(800px) rotateY(${activeAngle}deg) scale(${activeAngle === 270 ? '1.15' : '1'})`,
       filter: activeAngle === 270 ? 'brightness(0.85) contrast(1.1) saturate(1.15) blur(0.3px)' : 'none',
@@ -52,7 +108,9 @@ export default function Home({ onNavigate }) {
   const finalFeatured = featuredList.length > 0 ? featuredList : cars.slice(0, 3)
 
   const getHandpickedCars = () => {
-    if (handpickedTab === 'featured') {
+    if (handpickedTab === 'all') {
+      return cars
+    } else if (handpickedTab === 'featured') {
       const list = cars.filter(car => car.isFeatured)
       return list.length > 0 ? list.slice(0, 6) : cars.slice(0, 6)
     } else if (handpickedTab === 'latest') {
@@ -166,21 +224,30 @@ export default function Home({ onNavigate }) {
 
         {/* Filter Widget (Centered overlay at bottom of Hero) */}
         <div className="max-w-7xl mx-auto w-full relative z-20 mt-4">
-          <div className="bg-slate-950/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 shadow-2xl">            {/* Search Input Row */}
-            <div className="relative mb-5 max-w-md">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </span>
-              <input
-                type="text"
-                placeholder="Search"
-                onClick={() => onNavigate && onNavigate('buy')}
-                className="w-full bg-slate-900/60 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 cursor-pointer"
-              />
-            </div>
-
+          <div className="bg-slate-950/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 shadow-2xl">
+            {/* Search Input Row */}
+            <form onSubmit={handleHeroSearch} className="flex gap-3 mb-5 max-w-md w-full">
+              <div className="relative flex-grow">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search by brand, model..."
+                  value={heroQuery}
+                  onChange={(e) => setHeroQuery(e.target.value)}
+                  className="w-full bg-slate-900/60 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+              <button 
+                type="submit"
+                className="bg-white hover:bg-slate-100 text-slate-950 font-bold px-6 py-2.5 rounded-lg text-xs transition-all shadow-md cursor-pointer"
+              >
+                Search
+              </button>
+            </form>
             {/* Grid of Dropdowns */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {/* Brand */}
@@ -188,16 +255,14 @@ export default function Home({ onNavigate }) {
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Brand</label>
                 <div className="relative">
                   <select 
-                    onClick={() => onNavigate && onNavigate('buy')} 
-                    onChange={() => onNavigate && onNavigate('buy')}
+                    value={heroBrand}
+                    onChange={(e) => setHeroBrand(e.target.value)}
                     className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
                   >
-                    <option>Any Brand</option>
-                    <option>Mercedes-Benz</option>
-                    <option>BMW</option>
-                    <option>Audi</option>
-                    <option>Toyota</option>
-                    <option>Honda</option>
+                    <option value="Any Brand">Any Brand</option>
+                    {Array.from(new Set(cars.map(c => c.brand))).map(b => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-slate-400">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -212,8 +277,8 @@ export default function Home({ onNavigate }) {
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Model</label>
                 <div className="relative">
                   <select 
-                    onClick={() => onNavigate && onNavigate('buy')} 
-                    onChange={() => onNavigate && onNavigate('buy')}
+                    value={heroModel}
+                    onChange={(e) => setHeroModel(e.target.value)}
                     className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
                   >
                     <option>Any Model</option>
@@ -235,8 +300,8 @@ export default function Home({ onNavigate }) {
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Budget</label>
                 <div className="relative">
                   <select 
-                    onClick={() => onNavigate && onNavigate('buy')} 
-                    onChange={() => onNavigate && onNavigate('buy')}
+                    value={heroBudget}
+                    onChange={(e) => setHeroBudget(e.target.value)}
                     className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
                   >
                     <option>Any Budget</option>
@@ -258,8 +323,8 @@ export default function Home({ onNavigate }) {
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Fuel Type</label>
                 <div className="relative">
                   <select 
-                    onClick={() => onNavigate && onNavigate('buy')} 
-                    onChange={() => onNavigate && onNavigate('buy')}
+                    value={heroFuel}
+                    onChange={(e) => setHeroFuel(e.target.value)}
                     className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
                   >
                     <option>Any Fuel</option>
@@ -269,7 +334,7 @@ export default function Home({ onNavigate }) {
                     <option>Hybrid</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-slate-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2050/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </div>
@@ -281,8 +346,8 @@ export default function Home({ onNavigate }) {
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Transmission</label>
                 <div className="relative">
                   <select 
-                    onClick={() => onNavigate && onNavigate('buy')} 
-                    onChange={() => onNavigate && onNavigate('buy')}
+                    value={heroTransmission}
+                    onChange={(e) => setHeroTransmission(e.target.value)}
                     className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
                   >
                     <option>Any Type</option>
@@ -290,35 +355,21 @@ export default function Home({ onNavigate }) {
                     <option>Manual</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-slate-400">
-                    <svg xmlns="http://www.w3.org/2050/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2050/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </div>
                 </div>
               </div>
 
-              {/* Location */}
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Location</label>
-                <div className="relative">
-                  <select 
-                    onClick={() => onNavigate && onNavigate('buy')} 
-                    onChange={() => onNavigate && onNavigate('buy')}
-                    className="appearance-none w-full bg-slate-900/80 border border-slate-850 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 cursor-pointer"
-                  >
-                    <option>Any City</option>
-                    <option>Mumbai</option>
-                    <option>Delhi NCR</option>
-                    <option>Bangalore</option>
-                    <option>Hyderabad</option>
-                    <option>Chennai</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-slate-400">
-                    <svg xmlns="http://www.w3.org/2050/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
+              {/* Find Cars Button */}
+              <div className="flex items-end">
+                <button
+                  onClick={handleHeroFilterSubmit}
+                  className="w-full bg-[#E05E1B] hover:bg-[#c95013] text-white px-5 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors shadow-lg cursor-pointer text-center h-[38px] border-none"
+                >
+                  Find Cars
+                </button>
               </div>
             </div>
           </div>
@@ -513,7 +564,7 @@ export default function Home({ onNavigate }) {
                         View Details
                       </button>
                       <button 
-                        onClick={() => { if (onNavigate) onNavigate('finance'); }}
+                        onClick={() => { if (onBookTestDrive) onBookTestDrive(car); }}
                         className="flex-1 text-center bg-white hover:bg-slate-100 text-slate-950 rounded px-4 py-2.5 text-xs font-bold transition-all cursor-pointer"
                       >
                         Book Test Drive
@@ -542,7 +593,15 @@ export default function Home({ onNavigate }) {
           </div>
 
           {/* Category Tabs */}
-          <div className="flex space-x-2 bg-slate-100/80 p-1 rounded-full max-w-xs mb-12 border border-slate-200/50 backdrop-blur-sm">
+          <div className="flex space-x-2 bg-slate-100/80 p-1 rounded-full max-w-sm mb-12 border border-slate-200/50 backdrop-blur-sm">
+            <button 
+              onClick={() => setHandpickedTab('all')}
+              className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                handpickedTab === 'all' ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              All
+            </button>
             <button 
               onClick={() => setHandpickedTab('featured')}
               className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
@@ -1074,7 +1133,7 @@ export default function Home({ onNavigate }) {
               {/* Rotatable Vehicle Container */}
               <div className="my-10 relative overflow-hidden flex items-center justify-center h-64 border border-slate-850/60 rounded-2xl bg-slate-950/80">
                 <img 
-                  src={selectedCar.imageUrl} 
+                  src={activeImgSrc} 
                   alt={selectedCar.model}
                   style={getRotateStyle()}
                   className="max-h-full max-w-full object-contain pointer-events-none"
@@ -1211,7 +1270,7 @@ export default function Home({ onNavigate }) {
               {/* Booking CTAs */}
               <div className="mt-8 pt-6 border-t border-slate-850 flex gap-4">
                 <button 
-                  onClick={() => { setSelectedCar(null); if (onNavigate) onNavigate('finance'); }}
+                  onClick={() => { if (onBookTestDrive) onBookTestDrive(selectedCar); setSelectedCar(null); }}
                   className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md text-center cursor-pointer"
                 >
                   Book Test Drive

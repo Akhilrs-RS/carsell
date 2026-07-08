@@ -43,6 +43,7 @@ namespace CarSellApi.Data
                     FuelType = "Diesel",
                     Transmission = "Automatic",
                     ImageUrl = "https://images.unsplash.com/photo-1625210755976-97e50c765fcd?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = true,
                     CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -58,6 +59,7 @@ namespace CarSellApi.Data
                     FuelType = "Hybrid",
                     Transmission = "Automatic",
                     ImageUrl = "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = false,
                     CreatedAt = new DateTime(2026, 1, 5, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -73,6 +75,7 @@ namespace CarSellApi.Data
                     FuelType = "Diesel",
                     Transmission = "Automatic",
                     ImageUrl = "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = false,
                     CreatedAt = new DateTime(2026, 1, 10, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -88,6 +91,7 @@ namespace CarSellApi.Data
                     FuelType = "Petrol",
                     Transmission = "Manual",
                     ImageUrl = "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = false,
                     CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -103,6 +107,7 @@ namespace CarSellApi.Data
                     FuelType = "Hybrid",
                     Transmission = "Automatic",
                     ImageUrl = "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = false,
                     CreatedAt = new DateTime(2026, 1, 20, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -118,6 +123,7 @@ namespace CarSellApi.Data
                     FuelType = "Diesel",
                     Transmission = "Automatic",
                     ImageUrl = "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = false,
                     CreatedAt = new DateTime(2026, 1, 25, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -133,6 +139,7 @@ namespace CarSellApi.Data
                     FuelType = "Petrol",
                     Transmission = "Automatic",
                     ImageUrl = "https://images.unsplash.com/photo-1525609004556-c46c7d6cf0a3?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = true,
                     CreatedAt = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -148,6 +155,7 @@ namespace CarSellApi.Data
                     FuelType = "Diesel",
                     Transmission = "Automatic",
                     ImageUrl = "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = false,
                     CreatedAt = new DateTime(2026, 2, 5, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -163,6 +171,7 @@ namespace CarSellApi.Data
                     FuelType = "Petrol",
                     Transmission = "Manual",
                     ImageUrl = "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = false,
                     CreatedAt = new DateTime(2026, 2, 10, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -178,6 +187,7 @@ namespace CarSellApi.Data
                     FuelType = "Diesel",
                     Transmission = "Manual",
                     ImageUrl = "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = true,
                     CreatedAt = new DateTime(2026, 2, 15, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -193,6 +203,7 @@ namespace CarSellApi.Data
                     FuelType = "Petrol",
                     Transmission = "Automatic",
                     ImageUrl = "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = false,
                     CreatedAt = new DateTime(2026, 2, 20, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -208,6 +219,7 @@ namespace CarSellApi.Data
                     FuelType = "Petrol",
                     Transmission = "Automatic",
                     ImageUrl = "https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?auto=format&fit=crop&q=80&w=800",
+                    ImagesJson = "[]",
                     IsFeatured = true,
                     CreatedAt = new DateTime(2026, 2, 25, 0, 0, 0, DateTimeKind.Utc)
                 }

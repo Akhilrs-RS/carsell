@@ -33,6 +33,7 @@ namespace CarSellApi.Models
         public string Transmission { get; set; } = "Automatic";
 
         public string ImageUrl { get; set; } = string.Empty;
+        public string ImagesJson { get; set; } = "[]";
 
         public bool IsFeatured { get; set; } = false;
 

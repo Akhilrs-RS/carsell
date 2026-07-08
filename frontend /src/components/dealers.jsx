@@ -41,10 +41,33 @@ export default function Dealers() {
     color: '',
     fuelType: 'Petrol',
     transmission: 'Automatic',
-    imageUrl: ''
+    imageUrl: '',
+    imagesJson: '[]'
   })
   const [publishStatus, setPublishStatus] = useState({ type: '', message: '' })
   const [publishLoading, setPublishLoading] = useState(false)
+
+  const getImagesArray = () => {
+    try {
+      const arr = JSON.parse(publishForm.imagesJson || '[]');
+      const filled = [...arr];
+      while (filled.length < 8) {
+        filled.push('');
+      }
+      return filled;
+    } catch (e) {
+      return Array(8).fill('');
+    }
+  }
+
+  const handleAngleImageChange = (index, base64) => {
+    const arr = getImagesArray();
+    arr[index] = base64;
+    setPublishForm(prev => ({
+      ...prev,
+      imagesJson: JSON.stringify(arr)
+    }));
+  }
 
   const handleImageFileChange = (e) => {
     const file = e.target.files[0]
@@ -165,6 +188,7 @@ export default function Dealers() {
       fuelType: publishForm.fuelType,
       transmission: publishForm.transmission,
       imageUrl: publishForm.imageUrl,
+      imagesJson: publishForm.imagesJson || '[]',
       isFeatured: false
     }
 
@@ -190,7 +214,8 @@ export default function Dealers() {
         color: '',
         fuelType: 'Petrol',
         transmission: 'Automatic',
-        imageUrl: '/assets/b1.png'
+        imageUrl: '',
+        imagesJson: '[]'
       })
       fetchInventory()
     } catch (err) {
@@ -636,6 +661,76 @@ export default function Dealers() {
                         <span className="text-[10px] text-slate-400 font-medium">Click to upload image from local storage</span>
                       </div>
                     )}
+                  </div>
+
+                  <div className="border border-slate-855 rounded-xl p-4 bg-slate-900/40">
+                    <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                      360° Virtual Tour Views (Optional)
+                    </label>
+                    <p className="text-[9px] text-slate-600 mb-4 leading-relaxed">
+                      Upload up to 8 images from different angles to create an interactive 360° virtual tour. If left blank, the main image will be used with fallback effects.
+                    </p>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {[
+                        { index: 0, label: '0° - Front' },
+                        { index: 1, label: '45° - Front-Right' },
+                        { index: 2, label: '90° - Side (Right)' },
+                        { index: 3, label: '135° - Rear-Right' },
+                        { index: 4, label: '180° - Rear' },
+                        { index: 5, label: '225° - Rear-Left' },
+                        { index: 6, label: '270° - Interior' },
+                        { index: 7, label: '315° - Front-Left' }
+                      ].map((view) => {
+                        const imagesArray = getImagesArray();
+                        const val = imagesArray[view.index];
+
+                        return (
+                          <div key={view.index} className="border border-slate-855 rounded-lg p-2 bg-slate-950 flex flex-col items-center justify-between text-center min-h-36 relative">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-2">{view.label}</span>
+                            
+                            {val ? (
+                              <div className="flex flex-col items-center w-full">
+                                <img 
+                                  src={val} 
+                                  alt={view.label} 
+                                  className="h-16 w-full object-contain mb-2 rounded bg-slate-900"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleAngleImageChange(view.index, '')}
+                                  className="px-2 py-1 bg-red-950/40 border border-red-500/30 hover:bg-red-900/50 hover:border-red-500 text-red-400 text-[8px] font-bold rounded cursor-pointer transition-colors"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="border border-dashed border-slate-855 rounded-lg w-full flex-1 flex flex-col items-center justify-center p-3 relative hover:border-slate-700 transition-colors cursor-pointer">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        handleAngleImageChange(view.index, reader.result);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-500 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span className="text-[8px] text-slate-500 font-semibold">Upload View</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <button 

@@ -62,6 +62,7 @@ export default function Admin() {
     fuelType: 'Petrol',
     transmission: 'Automatic',
     imageUrl: '',
+    imagesJson: '[]',
     isFeatured: false
   })
 
@@ -149,6 +150,28 @@ export default function Admin() {
     }
   }
 
+  const getImagesArray = () => {
+    try {
+      const arr = JSON.parse(carFormData.imagesJson || '[]');
+      const filled = [...arr];
+      while (filled.length < 8) {
+        filled.push('');
+      }
+      return filled;
+    } catch (e) {
+      return Array(8).fill('');
+    }
+  }
+
+  const handleAngleImageChange = (index, base64) => {
+    const arr = getImagesArray();
+    arr[index] = base64;
+    setCarFormData(prev => ({
+      ...prev,
+      imagesJson: JSON.stringify(arr)
+    }));
+  }
+
   const openAddForm = () => {
     setEditingCar(null)
     setCarFormData({
@@ -161,6 +184,7 @@ export default function Admin() {
       fuelType: 'Petrol',
       transmission: 'Automatic',
       imageUrl: '',
+      imagesJson: '[]',
       isFeatured: false
     })
     setShowForm(true)
@@ -178,6 +202,7 @@ export default function Admin() {
       fuelType: car.fuelType,
       transmission: car.transmission,
       imageUrl: car.imageUrl,
+      imagesJson: car.imagesJson || '[]',
       isFeatured: car.isFeatured
     })
     setShowForm(true)
@@ -661,38 +686,112 @@ export default function Admin() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Brand</label>
-                        <input
-                          type="text"
-                          name="brand"
-                          required
-                          value={carFormData.brand}
-                          onChange={handleInputChange}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
-                          placeholder="e.g. Porsche"
-                        />
+                        <div className="relative">
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </span>
+                          <input
+                            type="text"
+                            name="brand"
+                            list="brand-list"
+                            required
+                            value={carFormData.brand}
+                            onChange={handleInputChange}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
+                            placeholder="Search & Select Brand"
+                          />
+                          <datalist id="brand-list">
+                            <option value="Porsche" />
+                            <option value="Audi" />
+                            <option value="BMW" />
+                            <option value="Mercedes-Benz" />
+                            <option value="Ferrari" />
+                            <option value="Lamborghini" />
+                            <option value="Aston Martin" />
+                            <option value="Land Rover" />
+                            <option value="Jaguar" />
+                            <option value="Volvo" />
+                            <option value="Tesla" />
+                            <option value="Ford" />
+                            <option value="Toyota" />
+                            <option value="Honda" />
+                            <option value="Hyundai" />
+                          </datalist>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Model</label>
-                        <input
-                          type="text"
-                          name="model"
-                          required
-                          value={carFormData.model}
-                          onChange={handleInputChange}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
-                          placeholder="e.g. 911 Carrera S"
-                        />
+                        <div className="relative">
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </span>
+                          <input
+                            type="text"
+                            name="model"
+                            list="model-list"
+                            required
+                            value={carFormData.model}
+                            onChange={handleInputChange}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
+                            placeholder="Search & Select Model"
+                          />
+                          <datalist id="model-list">
+                            <option value="911 Carrera S" />
+                            <option value="Taycan Turbo S" />
+                            <option value="R8 Coupe" />
+                            <option value="e-tron GT" />
+                            <option value="M8 Competition" />
+                            <option value="i7 xDrive60" />
+                            <option value="AMG GT Black Series" />
+                            <option value="S-Class" />
+                            <option value="SF90 Stradale" />
+                            <option value="Huracan Tecnica" />
+                            <option value="Vantage" />
+                            <option value="Range Rover" />
+                            <option value="F-Type R" />
+                            <option value="XC90" />
+                            <option value="Model S Plaid" />
+                            <option value="Mustang GT" />
+                            <option value="Land Cruiser" />
+                            <option value="Civic Type R" />
+                            <option value="Ioniq 5" />
+                          </datalist>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Year</label>
-                        <input
-                          type="number"
-                          name="year"
-                          required
-                          value={carFormData.year}
-                          onChange={handleInputChange}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
-                        />
+                        <div className="relative">
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </span>
+                          <input
+                            type="number"
+                            name="year"
+                            list="year-list"
+                            required
+                            value={carFormData.year}
+                            onChange={handleInputChange}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
+                            placeholder="Search & Select Year"
+                          />
+                          <datalist id="year-list">
+                            <option value="2018" />
+                            <option value="2019" />
+                            <option value="2020" />
+                            <option value="2021" />
+                            <option value="2022" />
+                            <option value="2023" />
+                            <option value="2024" />
+                            <option value="2025" />
+                            <option value="2026" />
+                          </datalist>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Price (INR)</label>
@@ -720,41 +819,88 @@ export default function Admin() {
                       </div>
                       <div>
                         <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Color</label>
-                        <input
-                          type="text"
-                          name="color"
-                          required
-                          value={carFormData.color}
-                          onChange={handleInputChange}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
-                          placeholder="e.g. Arctic Silver"
-                        />
+                        <div className="relative">
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </span>
+                          <input
+                            type="text"
+                            name="color"
+                            list="color-list"
+                            required
+                            value={carFormData.color}
+                            onChange={handleInputChange}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
+                            placeholder="Search & Select Color"
+                          />
+                          <datalist id="color-list">
+                            <option value="Arctic Silver" />
+                            <option value="Guards Red" />
+                            <option value="Onyx Black" />
+                            <option value="Mythos Black" />
+                            <option value="Alpine White" />
+                            <option value="Portimao Blue" />
+                            <option value="Obsidian Black" />
+                            <option value="Rosso Corsa" />
+                            <option value="Mantis Green" />
+                            <option value="British Racing Green" />
+                            <option value="Chalk Grey" />
+                            <option value="Nardo Grey" />
+                            <option value="San Marino Blue" />
+                          </datalist>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Fuel Type</label>
-                        <select
-                          name="fuelType"
-                          value={carFormData.fuelType}
-                          onChange={handleInputChange}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
-                        >
-                          <option>Petrol</option>
-                          <option>Diesel</option>
-                          <option>Electric</option>
-                          <option>Hybrid</option>
-                        </select>
+                        <div className="relative">
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </span>
+                          <input
+                            type="text"
+                            name="fuelType"
+                            list="fuel-list"
+                            required
+                            value={carFormData.fuelType}
+                            onChange={handleInputChange}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
+                            placeholder="Search & Select Fuel Type"
+                          />
+                          <datalist id="fuel-list">
+                            <option value="Petrol" />
+                            <option value="Diesel" />
+                            <option value="Electric" />
+                            <option value="Hybrid" />
+                          </datalist>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Transmission</label>
-                        <select
-                          name="transmission"
-                          value={carFormData.transmission}
-                          onChange={handleInputChange}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
-                        >
-                          <option>Automatic</option>
-                          <option>Manual</option>
-                        </select>
+                        <div className="relative">
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </span>
+                          <input
+                            type="text"
+                            name="transmission"
+                            list="trans-list"
+                            required
+                            value={carFormData.transmission}
+                            onChange={handleInputChange}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
+                            placeholder="Search & Select Transmission"
+                          />
+                          <datalist id="trans-list">
+                            <option value="Automatic" />
+                            <option value="Manual" />
+                          </datalist>
+                        </div>
                       </div>
                     </div>
 
@@ -790,6 +936,76 @@ export default function Admin() {
                           <span className="text-xs text-slate-400 font-medium">Click to upload image from local storage</span>
                         </div>
                       )}
+                    </div>
+
+                    <div className="border border-slate-800 rounded-xl p-4 bg-slate-900/40">
+                      <label className="block text-xs uppercase tracking-wider text-amber-500 font-bold mb-3">
+                        360° Virtual Tour Views (Optional)
+                      </label>
+                      <p className="text-[10px] text-slate-500 mb-4 leading-relaxed">
+                        Upload up to 8 images from different angles to create an interactive 360° virtual tour. If left blank, the main image will be used with fallback effects.
+                      </p>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {[
+                          { index: 0, label: '0° - Front' },
+                          { index: 1, label: '45° - Front-Right' },
+                          { index: 2, label: '90° - Side (Right)' },
+                          { index: 3, label: '135° - Rear-Right' },
+                          { index: 4, label: '180° - Rear' },
+                          { index: 5, label: '225° - Rear-Left' },
+                          { index: 6, label: '270° - Interior' },
+                          { index: 7, label: '315° - Front-Left' }
+                        ].map((view) => {
+                          const imagesArray = getImagesArray();
+                          const val = imagesArray[view.index];
+
+                          return (
+                            <div key={view.index} className="border border-slate-800 rounded-lg p-2 bg-slate-950 flex flex-col items-center justify-between text-center min-h-36 relative">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-2">{view.label}</span>
+                              
+                              {val ? (
+                                <div className="flex flex-col items-center w-full">
+                                  <img 
+                                    src={val} 
+                                    alt={view.label} 
+                                    className="h-16 w-full object-contain mb-2 rounded bg-slate-900"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAngleImageChange(view.index, '')}
+                                    className="px-2 py-1 bg-red-950/40 border border-red-500/30 hover:bg-red-900/50 hover:border-red-500 text-red-400 text-[8px] font-bold rounded cursor-pointer transition-colors"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="border border-dashed border-slate-800 rounded-lg w-full flex-1 flex flex-col items-center justify-center p-3 relative hover:border-slate-700 transition-colors cursor-pointer">
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                      const file = e.target.files[0];
+                                      if (file) {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                          handleAngleImageChange(view.index, reader.result);
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }
+                                    }}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                  />
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-500 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                                  </svg>
+                                  <span className="text-[8px] text-slate-500 font-semibold">Upload View</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     <div className="flex items-center space-x-3 bg-slate-950 p-4 rounded-xl border border-slate-800">

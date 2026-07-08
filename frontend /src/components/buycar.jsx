@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import bcImg from '../assets/bc.png'
 
-export default function BuyCar({ onNavigate }) {
+export default function BuyCar({ onNavigate, onBookTestDrive, initialSearchQuery, setInitialSearchQuery, initialFilters, setInitialFilters }) {
   const API_BASE = `http://${window.location.hostname}:5080/api`
 
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery || '')
   const [cars, setCars] = useState([])
   const [wishlistIds, setWishlistIds] = useState([])
   const [loading, setLoading] = useState(false)
@@ -16,6 +16,26 @@ export default function BuyCar({ onNavigate }) {
   // Selected Car for 360° Detail Modal
   const [selectedCar, setSelectedCar] = useState(null)
   const [activeAngle, setActiveAngle] = useState(0) // 0 to 315 in steps of 45
+
+  let parsedImages = []
+  try {
+    parsedImages = JSON.parse(selectedCar?.imagesJson || '[]')
+  } catch (e) {
+    parsedImages = []
+  }
+  const hasMultiImages = parsedImages.length > 0 && parsedImages.some(img => img !== '')
+  const activeIndex = activeAngle / 45
+  const activeImgSrc = (hasMultiImages && parsedImages[activeIndex]) 
+    ? parsedImages[activeIndex] 
+    : selectedCar?.imageUrl
+
+  // Filter States
+  const [filterBrand, setFilterBrand] = useState('All')
+  const [filterMaxPrice, setFilterMaxPrice] = useState('All')
+  const [filterMaxKm, setFilterMaxKm] = useState('All')
+  const [filterTransmission, setFilterTransmission] = useState('All')
+  const [filterFuel, setFilterFuel] = useState('All')
+  const [filterMinYear, setFilterMinYear] = useState('All')
 
   // Load active stock from DB
   const loadCars = async () => {
@@ -54,6 +74,43 @@ export default function BuyCar({ onNavigate }) {
     loadWishlist()
   }, [user])
 
+  useEffect(() => {
+    if (initialSearchQuery) {
+      setSearchQuery(initialSearchQuery)
+    }
+  }, [initialSearchQuery])
+
+  useEffect(() => {
+    if (initialFilters) {
+      if (initialFilters.brand && initialFilters.brand !== 'Any Brand') {
+        setFilterBrand(initialFilters.brand)
+      }
+      if (initialFilters.price && initialFilters.price !== 'Any Budget') {
+        setFilterMaxPrice(initialFilters.price)
+      }
+      if (initialFilters.fuel && initialFilters.fuel !== 'Any Fuel') {
+        setFilterFuel(initialFilters.fuel)
+      }
+      if (initialFilters.transmission && initialFilters.transmission !== 'Any Type') {
+        setFilterTransmission(initialFilters.transmission)
+      }
+      if (initialFilters.model && initialFilters.model !== 'Any Model') {
+        setSearchQuery(initialFilters.model)
+      }
+    }
+  }, [initialFilters])
+
+  useEffect(() => {
+    return () => {
+      if (setInitialSearchQuery) {
+        setInitialSearchQuery('')
+      }
+      if (setInitialFilters) {
+        setInitialFilters(null)
+      }
+    }
+  }, [])
+
   // Toggle wishlist state in API
   const handleWishlistToggle = async (carId, e) => {
     e.preventDefault()
@@ -88,12 +145,26 @@ export default function BuyCar({ onNavigate }) {
 
   // Filter Catalog
   const filteredCars = cars.filter((car) => {
-    return car.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           car.model.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = car.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          car.model.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesBrand = filterBrand === 'All' || car.brand === filterBrand
+    const matchesPrice = filterMaxPrice === 'All' || (car.price / 100000) <= parseFloat(filterMaxPrice)
+    const matchesKm = filterMaxKm === 'All' || car.kmDriven <= parseInt(filterMaxKm)
+    const matchesTransmission = filterTransmission === 'All' || car.transmission.toLowerCase() === filterTransmission.toLowerCase()
+    const matchesFuel = filterFuel === 'All' || car.fuelType.toLowerCase() === filterFuel.toLowerCase()
+    const matchesYear = filterMinYear === 'All' || car.year >= parseInt(filterMinYear)
+
+    return matchesSearch && matchesBrand && matchesPrice && matchesKm && matchesTransmission && matchesFuel && matchesYear
   })
 
   // Dynamic 360° perspective rotation simulation styles
   const getRotateStyle = () => {
+    if (hasMultiImages) {
+      return {
+        transition: 'transform 0.3s ease, filter 0.3s ease',
+        transformOrigin: 'center center'
+      }
+    }
     return {
       transform: `perspective(800px) rotateY(${activeAngle}deg) scale(${activeAngle === 270 ? '1.15' : '1'})`,
       filter: activeAngle === 270 ? 'brightness(0.85) contrast(1.1) saturate(1.15) blur(0.3px)' : 'none',
@@ -217,6 +288,130 @@ export default function BuyCar({ onNavigate }) {
           </div>
         </div>
 
+        {/* Filters Panel */}
+        <div className="bg-slate-50/80 border border-slate-200/80 rounded-[28px] p-6 mb-10 shadow-sm backdrop-blur-sm">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            
+            {/* Brand Filter */}
+            <div>
+              <label className="block text-[9px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Brand</label>
+              <select
+                value={filterBrand}
+                onChange={(e) => setFilterBrand(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 cursor-pointer"
+              >
+                {['All', ...Array.from(new Set(cars.map(c => c.brand)))].map((brand) => (
+                  <option key={brand} value={brand}>{brand === 'All' ? 'All Brands' : brand}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Price Filter */}
+            <div>
+              <label className="block text-[9px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Max Price</label>
+              <select
+                value={filterMaxPrice}
+                onChange={(e) => setFilterMaxPrice(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 cursor-pointer"
+              >
+                <option value="All">All Prices</option>
+                <option value="15">Under 15 Lakhs</option>
+                <option value="30">Under 30 Lakhs</option>
+                <option value="50">Under 50 Lakhs</option>
+                <option value="100">Under 100 Lakhs</option>
+                <option value="200">Under 200 Lakhs</option>
+              </select>
+            </div>
+
+            {/* Mileage Filter */}
+            <div>
+              <label className="block text-[9px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Max Mileage</label>
+              <select
+                value={filterMaxKm}
+                onChange={(e) => setFilterMaxKm(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 cursor-pointer"
+              >
+                <option value="All">Any Mileage</option>
+                <option value="15000">Under 15,000 km</option>
+                <option value="30000">Under 30,000 km</option>
+                <option value="50000">Under 50,000 km</option>
+                <option value="80000">Under 80,000 km</option>
+              </select>
+            </div>
+
+            {/* Transmission Filter */}
+            <div>
+              <label className="block text-[9px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Transmission</label>
+              <select
+                value={filterTransmission}
+                onChange={(e) => setFilterTransmission(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 cursor-pointer"
+              >
+                <option value="All">Any gearbox</option>
+                <option value="Automatic">Automatic</option>
+                <option value="Manual">Manual</option>
+              </select>
+            </div>
+
+            {/* Fuel Type Filter */}
+            <div>
+              <label className="block text-[9px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Fuel Type</label>
+              <select
+                value={filterFuel}
+                onChange={(e) => setFilterFuel(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 cursor-pointer"
+              >
+                <option value="All">Any fuel</option>
+                <option value="Petrol">Petrol</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Electric">Electric</option>
+                <option value="Hybrid">Hybrid</option>
+              </select>
+            </div>
+
+            {/* Year Filter */}
+            <div>
+              <label className="block text-[9px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Min Year</label>
+              <select
+                value={filterMinYear}
+                onChange={(e) => setFilterMinYear(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 cursor-pointer"
+              >
+                <option value="All">Any year</option>
+                <option value="2018">2018 or newer</option>
+                <option value="2020">2020 or newer</option>
+                <option value="2022">2022 or newer</option>
+                <option value="2024">2024 or newer</option>
+              </select>
+            </div>
+
+          </div>
+
+          {/* Active Filter Clear indicator bar */}
+          {(filterBrand !== 'All' || filterMaxPrice !== 'All' || filterMaxKm !== 'All' || filterTransmission !== 'All' || filterFuel !== 'All' || filterMinYear !== 'All' || searchQuery !== '') && (
+            <div className="mt-4 pt-4 border-t border-slate-200/60 flex items-center justify-between">
+              <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Active Filters Engaged</span>
+              <button
+                onClick={() => {
+                  setFilterBrand('All')
+                  setFilterMaxPrice('All')
+                  setFilterMaxKm('All')
+                  setFilterTransmission('All')
+                  setFilterFuel('All')
+                  setFilterMinYear('All')
+                  setSearchQuery('')
+                  if (setInitialSearchQuery) setInitialSearchQuery('')
+                  if (setInitialFilters) setInitialFilters(null)
+                }}
+                className="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 transition-colors flex items-center space-x-1 cursor-pointer text-right border-none bg-transparent"
+              >
+                <span>Reset All Filters</span>
+                <span>↺</span>
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Cars Grid */}
         {loading ? (
           <div className="text-center py-20 text-slate-500 font-normal">Loading luxury catalog...</div>
@@ -286,7 +481,7 @@ export default function BuyCar({ onNavigate }) {
                         View Details
                       </button>
                       <button 
-                        onClick={() => onNavigate('finance')}
+                        onClick={() => { if (onBookTestDrive) onBookTestDrive(car); }}
                         className="flex-1 bg-[#1A233A] text-white hover:bg-[#111827] py-2 rounded-full text-[11px] font-bold transition-all text-center shadow-md cursor-pointer"
                       >
                         Test Drive
@@ -332,7 +527,7 @@ export default function BuyCar({ onNavigate }) {
               {/* Rotatable Vehicle Container */}
               <div className="my-10 relative overflow-hidden flex items-center justify-center h-64 border border-slate-850/60 rounded-2xl bg-slate-950/80">
                 <img 
-                  src={selectedCar.imageUrl} 
+                  src={activeImgSrc} 
                   alt={selectedCar.model}
                   style={getRotateStyle()}
                   className="max-h-full max-w-full object-contain pointer-events-none"
@@ -469,7 +664,7 @@ export default function BuyCar({ onNavigate }) {
               {/* Booking CTAs */}
               <div className="mt-8 pt-6 border-t border-slate-850 flex gap-4">
                 <button 
-                  onClick={() => { setSelectedCar(null); onNavigate('finance'); }}
+                  onClick={() => { if (onBookTestDrive) onBookTestDrive(selectedCar); setSelectedCar(null); }}
                   className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-md text-center cursor-pointer"
                 >
                   Book Test Drive
