@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import hpImg from '../assets/hp.png'
 import iVideo from '../assets/i.mp4'
+import frame90 from '../assets/Frame 90.png'
 
 export default function Home({ onNavigate, onBookTestDrive, setInitialSearchQuery, setInitialFilters }) {
   const API_BASE = `http://${window.location.hostname}:5080/api`
@@ -398,82 +399,15 @@ export default function Home({ onNavigate, onBookTestDrive, setInitialSearchQuer
           </div>
 
           {/* Brands Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-            {/* Mercedes-Benz */}
-            <div 
-              onClick={() => onNavigate && onNavigate('buy')}
-              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
-            >
-              <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 2v20M12 12l-8.66 5M12 12l8.66 5" />
-              </svg>
-              <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors uppercase tracking-wider">Mercedes-Benz</span>
-            </div>
-
-            {/* BMW */}
-            <div 
-              onClick={() => onNavigate && onNavigate('buy')}
-              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
-            >
-              <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
-                <circle cx="12" cy="12" r="10" />
-                <circle cx="12" cy="12" r="6" strokeDasharray="2 2" />
-                <path d="M12 2v20M2 12h20" />
-              </svg>
-              <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors uppercase tracking-wider">BMW</span>
-            </div>
-
-            {/* Audi */}
-            <div 
-              onClick={() => onNavigate && onNavigate('buy')}
-              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
-            >
-              <svg className="w-14 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="6" cy="12" r="3" />
-                <circle cx="10" cy="12" r="3" />
-                <circle cx="14" cy="12" r="3" />
-                <circle cx="18" cy="12" r="3" />
-              </svg>
-              <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors uppercase tracking-wider">Audi</span>
-            </div>
-
-            {/* Toyota */}
-            <div 
-              onClick={() => onNavigate && onNavigate('buy')}
-              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
-            >
-              <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
-                <ellipse cx="12" cy="12" rx="10" ry="7" />
-                <ellipse cx="12" cy="10" rx="6" ry="4" />
-                <ellipse cx="12" cy="12" rx="2" ry="7" />
-              </svg>
-              <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors uppercase tracking-wider">Toyota</span>
-            </div>
-
-            {/* Honda */}
-            <div 
-              onClick={() => onNavigate && onNavigate('buy')}
-              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
-            >
-              <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="4" y="4" width="16" height="16" rx="3" />
-                <path d="M7 6v12h2v-5h6v5h2V6h-2v5H9V6H7z" />
-              </svg>
-              <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors uppercase tracking-wider">Honda</span>
-            </div>
-
-            {/* Hyundai */}
-            <div 
-              onClick={() => onNavigate && onNavigate('buy')}
-              className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 flex flex-col items-center justify-center hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-300 group cursor-pointer"
-            >
-              <svg className="w-12 h-12 text-slate-400 group-hover:text-white transition-colors mb-4" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.2">
-                <ellipse cx="12" cy="12" rx="10" ry="7" transform="rotate(-10 12 12)" />
-                <path d="M8 8.5l2 7h2v-4.5h2v4.5h2l-2-7" strokeLinecap="round" />
-              </svg>
-              <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors uppercase tracking-wider">Hyundai</span>
-            </div>
+          <div 
+            onClick={() => onNavigate && onNavigate('buy')}
+            className="w-full cursor-pointer transition-opacity hover:opacity-90 mt-6"
+          >
+            <img 
+              src={frame90} 
+              alt="Popular Marques" 
+              className="w-full max-w-6xl mx-auto object-contain"
+            />
           </div>
         </div>
       </section>
