@@ -36,6 +36,7 @@ export default function BuyCar({ onNavigate, onBookTestDrive, initialSearchQuery
   const [filterTransmission, setFilterTransmission] = useState('All')
   const [filterFuel, setFilterFuel] = useState('All')
   const [filterMinYear, setFilterMinYear] = useState('All')
+  const [filterBodyType, setFilterBodyType] = useState('All')
 
   // Load active stock from DB
   const loadCars = async () => {
@@ -86,7 +87,12 @@ export default function BuyCar({ onNavigate, onBookTestDrive, initialSearchQuery
         setFilterBrand(initialFilters.brand)
       }
       if (initialFilters.price && initialFilters.price !== 'Any Budget') {
-        setFilterMaxPrice(initialFilters.price)
+        let normalizedPrice = initialFilters.price
+        if (normalizedPrice === '10') normalizedPrice = '0-10'
+        else if (normalizedPrice === '25') normalizedPrice = '10-25'
+        else if (normalizedPrice === '50') normalizedPrice = '25-50'
+        else if (normalizedPrice === '200') normalizedPrice = '50-999'
+        setFilterMaxPrice(normalizedPrice)
       }
       if (initialFilters.fuel && initialFilters.fuel !== 'Any Fuel') {
         setFilterFuel(initialFilters.fuel)
@@ -95,7 +101,16 @@ export default function BuyCar({ onNavigate, onBookTestDrive, initialSearchQuery
         setFilterTransmission(initialFilters.transmission)
       }
       if (initialFilters.model && initialFilters.model !== 'Any Model') {
-        setSearchQuery(initialFilters.model)
+        const modelLower = initialFilters.model.toLowerCase()
+        if (modelLower.includes('sedan') || modelLower.includes('suv') || modelLower.includes('hatchback') || modelLower.includes('coupe')) {
+          let formattedType = 'Sedan'
+          if (modelLower === 'suv') formattedType = 'SUV'
+          else if (modelLower === 'hatchback') formattedType = 'Hatchback'
+          else if (modelLower === 'coupe') formattedType = 'Coupe'
+          setFilterBodyType(formattedType)
+        } else {
+          setSearchQuery(initialFilters.model)
+        }
       }
     }
   }, [initialFilters])
@@ -143,18 +158,45 @@ export default function BuyCar({ onNavigate, onBookTestDrive, initialSearchQuery
     }
   }
 
+  const getBodyType = (car) => {
+    const model = (car.model || '').toLowerCase()
+    if (model.includes('coupe') || model.includes('911') || model.includes('amg gt') || model.includes('stradale') || model.includes('tecnica') || model.includes('vantage') || model.includes('f-type') || model.includes('mustang') || model.includes('carrera')) {
+      return 'Coupe'
+    }
+    if (model.includes('fortuner') || model.includes('cruiser') || model.includes('vitara') || model.includes('creta') || model.includes('seltos') || model.includes('x1') || model.includes('innova') || model.includes('elevate') || model.includes('rover') || model.includes('harrier') || model.includes('safari') || model.includes('thar') || model.includes('hector') || model.includes('compass') || model.includes('xc90') || model.includes('q7') || model.includes('q5') || model.includes('x5') || model.includes('gle') || model.includes('gls')) {
+      return 'SUV'
+    }
+    if (model.includes('swift') || model.includes('i20') || model.includes('altroz') || model.includes('tiago') || model.includes('baleno') || model.includes('glanza') || model.includes('jazz') || model.includes('cooper') || model.includes('mini') || model.includes('ioniq') || model.includes('ev6')) {
+      return 'Hatchback'
+    }
+    return 'Sedan'
+  }
+
   // Filter Catalog
   const filteredCars = cars.filter((car) => {
     const matchesSearch = car.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           car.model.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesBrand = filterBrand === 'All' || car.brand === filterBrand
-    const matchesPrice = filterMaxPrice === 'All' || (car.price / 100000) <= parseFloat(filterMaxPrice)
+    let matchesPrice = true
+    if (filterMaxPrice !== 'All') {
+      const priceLakhs = car.price / 100000
+      if (filterMaxPrice === '0-10' || filterMaxPrice === '10') {
+        matchesPrice = priceLakhs <= 10
+      } else if (filterMaxPrice === '10-25' || filterMaxPrice === '25') {
+        matchesPrice = priceLakhs >= 10 && priceLakhs <= 25
+      } else if (filterMaxPrice === '25-50' || filterMaxPrice === '50') {
+        matchesPrice = priceLakhs >= 25 && priceLakhs <= 50
+      } else if (filterMaxPrice === '50-999' || filterMaxPrice === '200') {
+        matchesPrice = priceLakhs >= 50
+      }
+    }
     const matchesKm = filterMaxKm === 'All' || car.kmDriven <= parseInt(filterMaxKm)
     const matchesTransmission = filterTransmission === 'All' || car.transmission.toLowerCase() === filterTransmission.toLowerCase()
     const matchesFuel = filterFuel === 'All' || car.fuelType.toLowerCase() === filterFuel.toLowerCase()
     const matchesYear = filterMinYear === 'All' || car.year >= parseInt(filterMinYear)
+    const matchesBodyType = filterBodyType === 'All' || getBodyType(car).toLowerCase() === filterBodyType.toLowerCase()
 
-    return matchesSearch && matchesBrand && matchesPrice && matchesKm && matchesTransmission && matchesFuel && matchesYear
+    return matchesSearch && matchesBrand && matchesPrice && matchesKm && matchesTransmission && matchesFuel && matchesYear && matchesBodyType
   })
 
   // Dynamic 360° perspective rotation simulation styles
@@ -290,7 +332,7 @@ export default function BuyCar({ onNavigate, onBookTestDrive, initialSearchQuery
 
         {/* Filters Panel */}
         <div className="bg-slate-50/80 border border-slate-200/80 rounded-[28px] p-6 mb-10 shadow-sm backdrop-blur-sm">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
             
             {/* Brand Filter */}
             <div>
@@ -308,18 +350,17 @@ export default function BuyCar({ onNavigate, onBookTestDrive, initialSearchQuery
 
             {/* Price Filter */}
             <div>
-              <label className="block text-[9px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Max Price</label>
+              <label className="block text-[9px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Price Range</label>
               <select
                 value={filterMaxPrice}
                 onChange={(e) => setFilterMaxPrice(e.target.value)}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 cursor-pointer"
               >
                 <option value="All">All Prices</option>
-                <option value="15">Under 15 Lakhs</option>
-                <option value="30">Under 30 Lakhs</option>
-                <option value="50">Under 50 Lakhs</option>
-                <option value="100">Under 100 Lakhs</option>
-                <option value="200">Under 200 Lakhs</option>
+                <option value="0-10">Under 10 Lakhs</option>
+                <option value="10-25">10 - 25 Lakhs</option>
+                <option value="25-50">25 - 50 Lakhs</option>
+                <option value="50-999">Above 50 Lakhs</option>
               </select>
             </div>
 
@@ -385,10 +426,26 @@ export default function BuyCar({ onNavigate, onBookTestDrive, initialSearchQuery
               </select>
             </div>
 
+            {/* Body Type Filter */}
+            <div>
+              <label className="block text-[9px] uppercase tracking-wider text-slate-500 font-semibold mb-2">Body Type</label>
+              <select
+                value={filterBodyType}
+                onChange={(e) => setFilterBodyType(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-400 cursor-pointer"
+              >
+                <option value="All">All Body Types</option>
+                <option value="Sedan">Sedan</option>
+                <option value="SUV">SUV</option>
+                <option value="Hatchback">Hatchback</option>
+                <option value="Coupe">Coupe</option>
+              </select>
+            </div>
+
           </div>
 
           {/* Active Filter Clear indicator bar */}
-          {(filterBrand !== 'All' || filterMaxPrice !== 'All' || filterMaxKm !== 'All' || filterTransmission !== 'All' || filterFuel !== 'All' || filterMinYear !== 'All' || searchQuery !== '') && (
+          {(filterBrand !== 'All' || filterMaxPrice !== 'All' || filterMaxKm !== 'All' || filterTransmission !== 'All' || filterFuel !== 'All' || filterMinYear !== 'All' || filterBodyType !== 'All' || searchQuery !== '') && (
             <div className="mt-4 pt-4 border-t border-slate-200/60 flex items-center justify-between">
               <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Active Filters Engaged</span>
               <button
@@ -399,6 +456,7 @@ export default function BuyCar({ onNavigate, onBookTestDrive, initialSearchQuery
                   setFilterTransmission('All')
                   setFilterFuel('All')
                   setFilterMinYear('All')
+                  setFilterBodyType('All')
                   setSearchQuery('')
                   if (setInitialSearchQuery) setInitialSearchQuery('')
                   if (setInitialFilters) setInitialFilters(null)
